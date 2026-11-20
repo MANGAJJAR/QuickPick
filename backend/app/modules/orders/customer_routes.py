@@ -12,7 +12,7 @@ from app.api.dependencies import require_customer
 from app.core.security import AuthUser
 from app.modules.orders.customer_service import CustomerOrderService
 from app.modules.orders.deps import get_customer_order_service
-from app.modules.orders.schemas import CancelRequest, CheckoutRequest
+from app.modules.orders.schemas import ArrivalRequest, CancelRequest, CheckoutRequest
 from app.shared.pagination import PageParams, page_params
 from app.shared.schemas import ok
 
@@ -26,7 +26,7 @@ async def checkout_preview(
     service: CustomerOrderService = Depends(get_customer_order_service),
 ) -> dict:
     """Server-priced preview including the pickup discount."""
-    return ok(await service.preview(body.store_id, body.items))
+    return ok(await service.preview(body.store_id, body.items, body.location))
 
 
 @router.post("/orders", status_code=201)
@@ -38,7 +38,9 @@ async def create_order(
     service: CustomerOrderService = Depends(get_customer_order_service),
 ) -> dict:
     """Place a pickup order (reserves stock atomically). Replays with the same key return 200."""
-    order, created = await service.create_order(user, body.store_id, body.items, idempotency_key)
+    order, created = await service.create_order(
+        user, body.store_id, body.items, idempotency_key, body.fulfilment, body.delivery_address, body.location
+    )
     if not created:
         response.status_code = 200
     return ok(order)
@@ -74,3 +76,24 @@ async def cancel_order(
 ) -> dict:
     """Cancel an order that has not started preparation."""
     return ok(await service.cancel_order(user, order_id, body.reason if body else None))
+
+
+@router.post("/orders/{order_id}/arrival")
+async def share_arrival(
+    order_id: str,
+    body: ArrivalRequest,
+    user: AuthUser = Depends(require_customer),
+    service: CustomerOrderService = Depends(get_customer_order_service),
+) -> dict:
+    """Tell the store you are ``ON_THE_WAY`` (with an ETA in minutes) or have ``ARRIVED``."""
+    return ok(await service.set_arrival(user, order_id, body.status, body.eta_minutes))
+
+
+@router.delete("/orders/{order_id}/arrival")
+async def clear_arrival(
+    order_id: str,
+    user: AuthUser = Depends(require_customer),
+    service: CustomerOrderService = Depends(get_customer_order_service),
+) -> dict:
+    """Withdraw a previously shared arrival signal."""
+    return ok(await service.set_arrival(user, order_id, None, None))

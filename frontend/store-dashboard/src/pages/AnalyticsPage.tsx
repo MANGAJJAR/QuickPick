@@ -80,7 +80,7 @@ export function AnalyticsPage() {
         <ErrorState error={overview.error} onRetry={() => void overview.refetch()} />
       ) : (
         <>
-          <SectionTitle badge="Measured" tone="bg-brand-100 text-brand-900">Measured from completed orders</SectionTitle>
+          <SectionTitle badge="Measured" tone="bg-brand-100 text-accent">Measured from completed orders</SectionTitle>
           <div className="grid gap-4 md:grid-cols-3" data-testid="measured-section">
             <Measured label="Total pickups completed" value={overview.data ? overview.data.total_pickups : <Skeleton className="h-10 w-16" />} />
             <Measured label="Average preparation time" value={overview.data ? formatDuration(overview.data.avg_preparation_seconds) : <Skeleton className="h-10 w-24" />} hint="Preparing → ready" />
@@ -94,7 +94,7 @@ export function AnalyticsPage() {
         </>
       )}
 
-      <SectionTitle badge="Measured" tone="bg-brand-100 text-brand-900">Orders per day</SectionTitle>
+      <SectionTitle badge="Measured" tone="bg-brand-100 text-accent">Orders per day</SectionTitle>
       <Card className="p-4">
         <p className="mb-2 text-xs text-ink-faint">Counted in your browser from the latest 100 orders (the API has no daily endpoint yet).</p>
         {recent.isError ? <ErrorState error={recent.error} onRetry={() => void recent.refetch()} /> : recent.isPending ? <Skeleton className="h-64 w-full" /> : (
@@ -114,7 +114,7 @@ export function AnalyticsPage() {
         )}
       </Card>
 
-      <SectionTitle badge="Measured" tone="bg-brand-100 text-brand-900">Preparation time per order</SectionTitle>
+      <SectionTitle badge="Measured" tone="bg-brand-100 text-accent">Preparation time per order</SectionTitle>
       <Card className="p-4">
         <p className="mb-2 text-xs text-ink-faint">Minutes from “preparing” to “ready” for the latest completed orders.</p>
         {recent.isPending ? <Skeleton className="h-56 w-full" /> : prep.length === 0 ? <p className="py-8 text-center text-sm font-semibold text-ink-faint">No completed orders yet.</p> : (

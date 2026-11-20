@@ -42,3 +42,19 @@ def build_pricing(subtotal: Decimal, quote: DiscountQuote) -> Pricing:
         rider_cost_saved=quote.rider_cost_saved,
         platform_net_saving=quote.platform_net_saving,
     )
+
+
+def build_delivery_pricing(subtotal: Decimal, fee: Decimal, free_above: Decimal, rider_cost: Decimal) -> Pricing:
+    """Price of the same cart delivered: a flat fee, free from ``free_above``; no pickup discount, no QuickPick fee."""
+    subtotal = to_money(subtotal)
+    delivery_fee = to_money(0) if subtotal >= free_above else to_money(fee)
+    return Pricing(
+        subtotal=subtotal,
+        delivery_fee=delivery_fee,
+        pickup_discount=to_money(0),
+        pickup_fee=to_money(0),
+        total_amount=sum_money([subtotal, delivery_fee]),
+        you_save=to_money(0),
+        rider_cost_saved=to_money(rider_cost),
+        platform_net_saving=to_money(0),
+    )

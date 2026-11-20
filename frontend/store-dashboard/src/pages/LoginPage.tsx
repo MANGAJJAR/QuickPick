@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
-import { BoxIcon } from '../components/icons'
+import { Logo } from '../components/Logo'
 import { Button, Card } from '../components/ui'
 import { PasswordField } from '../components/PasswordField'
 
@@ -46,7 +46,7 @@ export function LoginPage() {
     <div className="grid min-h-dvh place-items-center bg-rail p-6">
       <div className="w-full max-w-md">
         <div className="mb-6 flex items-center gap-3 text-white">
-          <span className="grid h-12 w-12 place-items-center rounded-2xl bg-wheat-300 text-brand-600"><BoxIcon size={26} /></span>
+          <Logo className="h-12 w-12" />
           <div>
             <h1 className="font-display text-3xl font-semibold leading-tight">Quick<span className="text-wheat-300">Pick</span> Store</h1>
             <p className="text-sm text-white/70">Dark store operations</p>

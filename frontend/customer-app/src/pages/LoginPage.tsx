@@ -3,7 +3,7 @@ import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { Button, Card } from '../components/ui'
 import { PasswordField } from '../components/PasswordField'
-import { PinIcon } from '../components/icons'
+import { Logo } from '../components/Logo'
 import { useApi } from '../api/context'
 import { useMe } from '../hooks/queries'
 
@@ -56,9 +56,9 @@ export function LoginPage() {
   return (
     <div className="mx-auto flex min-h-dvh max-w-md flex-col justify-center px-4 py-10">
       <div className="banner-texture mb-6 overflow-hidden rounded-[1.75rem] bg-brand-600 px-6 py-8 text-center text-white">
-        <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-wheat-300 text-brand-600"><PinIcon width={28} height={28} /></span>
+        <Logo className="mx-auto h-16 w-16" />
         <h1 className="mt-4 font-display text-4xl font-semibold tracking-tight">Quick<span className="text-wheat-300">Pick</span></h1>
-        <p className="mt-2 text-brand-100">Skip the delivery fee. Pick up from a dark store near you.</p>
+        <p className="mt-2 text-white/80">Skip the delivery fee. Pick up from a dark store near you.</p>
       </div>
 
       <Card className="p-5">
@@ -73,7 +73,7 @@ export function LoginPage() {
           <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
             <div role="tablist" aria-label="Sign in or create account" className="grid grid-cols-2 rounded-xl bg-wheat-100 p-1">
               {(['signin', 'signup'] as const).map((m) => (
-                <button key={m} type="button" role="tab" aria-selected={mode === m} onClick={() => { setMode(m); setError(null) }} className={`min-h-10 rounded-lg text-sm font-bold ${mode === m ? 'bg-brand-600 text-white shadow-sm' : 'text-ink-soft'}`}>
+                <button key={m} type="button" role="tab" aria-selected={mode === m} onClick={() => { setMode(m); setError(null) }} className={`min-h-10 rounded-lg text-sm font-bold ${mode === m ? 'bg-brand-600 text-white ' : 'text-ink-soft'}`}>
                   {m === 'signin' ? 'Sign in' : 'Create account'}
                 </button>
               ))}

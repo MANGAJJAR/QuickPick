@@ -4,13 +4,15 @@ import { useAnalytics, useBoard, usePickupEnabled, useQueue, useRecentOrders, us
 import { dayKey, formatDuration } from '../lib/format'
 import { Button, Card, ErrorState, InfoTip, PageHeader, Skeleton } from '../components/ui'
 import type { StoreOperatingStatus } from '../api/types'
+import { RiderSupplyCard } from '../components/RiderSupplyCard'
 
-function Stat({ label, value, hint, tone = '' }: { label: string; value: ReactNode; hint?: string; tone?: string }) {
+function Stat({ label, value, hint, tone = '', alert = false }: { label: string; value: ReactNode; hint?: string; tone?: string; alert?: boolean }) {
+  // `alert` is the one thing the counter needs to act on now: it is the only loud card on the page.
   return (
-    <Card className={`p-4 ${tone}`}>
-      <p className="text-sm font-bold text-ink-soft">{label}</p>
-      <p className="mt-1 text-4xl font-extrabold tracking-tight num">{value}</p>
-      {hint && <p className="mt-1 text-xs text-ink-faint">{hint}</p>}
+    <Card className={`p-4 ${alert ? 'border-cta-600 bg-cta-600 text-white ' : tone}`}>
+      <p className={`text-sm font-bold ${alert ? 'text-white/90' : 'text-ink-soft'}`}>{label}</p>
+      <p className="mt-1 font-display text-5xl font-semibold tracking-tight num">{value}</p>
+      {hint && <p className={`mt-1 text-xs ${alert ? 'text-white/85' : 'text-ink-faint'}`}>{hint}</p>}
     </Card>
   )
 }
@@ -97,12 +99,14 @@ export function OverviewPage() {
         {setPickup.isError && <p role="alert" className="mt-3 text-sm font-bold text-danger-600">{setPickup.error.message}</p>}
       </Card>
 
+      <RiderSupplyCard />
+
       {board.isError && !board.data ? (
         <ErrorState error={board.error} onRetry={() => void board.refetch()} />
       ) : (
         <>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <Stat label="New orders waiting" value={pending ?? <Skeleton className="h-10 w-12" />} tone={pending ? 'border-wheat-500 bg-wheat-50' : ''} />
+            <Stat label="New orders waiting" value={pending ?? <Skeleton className="h-10 w-12" />} alert={!!pending} hint={pending ? 'Accept them on the Orders board' : 'Nothing waiting'} />
             <Stat label="In progress" value={inProgress ?? <Skeleton className="h-10 w-12" />} hint="Accepted + preparing" />
             <Stat label="Pickup queue" value={queue.data ? queue.data.length : <Skeleton className="h-10 w-12" />} hint="All open orders at the store" />
             <Stat label="Avg preparation time" value={analytics.data ? formatDuration(analytics.data.avg_preparation_seconds) : <Skeleton className="h-10 w-24" />} hint="Measured, all completed orders" />

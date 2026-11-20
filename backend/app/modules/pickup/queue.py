@@ -7,7 +7,7 @@ from typing import Any, Callable
 
 from app.modules.orders.repository import OrderRepository
 from app.modules.pickup.schemas import QueueEntry
-from app.shared.enums import OrderStatus
+from app.shared.enums import OrderStatus, OrderType
 from app.shared.models import Order, utc_now
 
 
@@ -29,6 +29,10 @@ def build_queue_entry(order: Order, now: datetime) -> QueueEntry:
         placed_at=order.created_at,
         preparation_elapsed_seconds=prep_elapsed,
         ready_waiting_seconds=waiting,
+        arrival_status=order.arrival_status.value if order.arrival_status else None,
+        arrival_eta_minutes=order.arrival_eta_minutes,
+        arrival_updated_at=order.arrival_updated_at,
+        expires_at=order.expires_at,
     )
 
 
@@ -42,4 +46,5 @@ class PickupQueueService:
     async def queue(self, store_id: str) -> list[QueueEntry]:
         """Open orders of ``store_id``, oldest first, with timers."""
         now = self._clock()
-        return [build_queue_entry(o, now) for o in await self._orders.active_queue(store_id)]
+        # The counter queue is for people collecting in person; delivery orders are handled by dispatch.
+        return [build_queue_entry(o, now) for o in await self._orders.active_queue(store_id) if o.order_type == OrderType.PICKUP]

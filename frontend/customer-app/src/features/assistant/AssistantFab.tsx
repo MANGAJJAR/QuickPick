@@ -13,7 +13,7 @@ export function AssistantFab() {
       {!open && (
         <button
           onClick={() => setOpen(true)}
-          className="fixed bottom-36 right-4 z-40 flex h-12 w-12 items-center justify-center gap-2 rounded-full bg-brand-600 sm:w-auto sm:px-5 font-bold text-white shadow-lift ring-2 ring-wheat-300 transition hover:bg-brand-700 md:bottom-6"
+          className="fixed bottom-36 right-4 z-40 flex h-12 w-12 items-center justify-center gap-2 rounded-full bg-brand-600 sm:w-auto sm:px-5 font-bold text-white ring-2 ring-wheat-300 transition hover:brightness-90 min-[960px]:bottom-6 min-[960px]:left-6 min-[960px]:right-auto"
           aria-label="Open shopping assistant"
         >
           <ChatIcon width={20} height={20} /> <span className="hidden sm:inline">Assistant</span>

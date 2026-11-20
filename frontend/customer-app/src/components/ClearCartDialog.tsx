@@ -15,7 +15,7 @@ export function ClearCartDialog({ itemCount, onConfirm, onCancel }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 p-4 sm:items-center">
-      <div role="alertdialog" aria-modal="true" aria-labelledby="clear-title" aria-describedby="clear-desc" className="anim-pop w-full max-w-sm rounded-card bg-surface p-5 shadow-lift">
+      <div role="alertdialog" aria-modal="true" aria-labelledby="clear-title" aria-describedby="clear-desc" className="anim-pop w-full max-w-sm rounded-card bg-surface p-5">
         <h2 id="clear-title" className="text-lg font-extrabold">Clear your cart?</h2>
         <p id="clear-desc" className="mt-2 text-sm text-ink-soft">This removes all {itemCount} item{itemCount === 1 ? '' : 's'} from your cart.</p>
         <div className="mt-5 flex flex-col gap-2">

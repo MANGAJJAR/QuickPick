@@ -1,15 +1,16 @@
 import { forwardRef, type AnchorHTMLAttributes, type ButtonHTMLAttributes, type HTMLAttributes, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { ApiError } from '../api/client'
+import { BasketIcon } from './icons'
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'brand'
 
 const VARIANTS: Record<Variant, string> = {
   // Terracotta coral is reserved for "do it" actions: Add, Checkout, Place order.
-  primary: 'bg-cta-600 text-white shadow-sm hover:bg-cta-700 active:scale-[0.98] disabled:bg-cta-600/45 disabled:shadow-none',
-  brand: 'bg-brand-600 text-white shadow-sm hover:bg-brand-700 active:scale-[0.98] disabled:bg-brand-600/45',
+  primary: 'bg-cta-600 text-white  hover:brightness-90 active:scale-[0.98] disabled:bg-cta-600/45',
+  brand: 'bg-brand-600 text-white  hover:brightness-90 active:scale-[0.98] disabled:bg-brand-600/45',
   secondary: 'border border-line bg-surface text-ink hover:border-brand-200 hover:bg-brand-50 disabled:text-ink-faint',
-  ghost: 'text-brand-600 hover:bg-brand-50 disabled:text-ink-faint',
+  ghost: 'text-accent hover:bg-brand-50 disabled:text-ink-faint',
   danger: 'border border-danger-600/30 bg-surface text-danger-600 hover:bg-danger-50 disabled:opacity-50',
 }
 
@@ -48,7 +49,7 @@ export function Spinner({ className = '' }: { className?: string }) {
 }
 
 export function Card({ className = '', ...rest }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={`rounded-card border border-line bg-surface shadow-soft ${className}`} {...rest} />
+  return <div className={`rounded-card border border-line bg-surface  ${className}`} {...rest} />
 }
 
 export function Skeleton({ className = '' }: { className?: string }) {
@@ -58,7 +59,7 @@ export function Skeleton({ className = '' }: { className?: string }) {
 type Tone = 'neutral' | 'good' | 'warn' | 'bad' | 'wheat'
 const TONES: Record<Tone, string> = {
   neutral: 'bg-canvas text-ink-soft',
-  good: 'bg-brand-100 text-brand-600',
+  good: 'bg-brand-100 text-accent',
   warn: 'bg-wheat-100 text-warn-600',
   bad: 'bg-danger-50 text-danger-600',
   wheat: 'bg-wheat-300 text-brand-700',
@@ -85,7 +86,7 @@ export function ErrorState({ error, onRetry, title }: { error: unknown; onRetry?
 export function EmptyState({ title, body, action }: { title: string; body?: string; action?: ReactNode }) {
   return (
     <Card className="flex flex-col items-center gap-2 p-10 text-center">
-      <div className="mb-1 grid h-16 w-16 place-items-center rounded-full bg-wheat-100 text-3xl" aria-hidden="true">🧺</div>
+      <div className="mb-1 grid h-16 w-16 place-items-center rounded-[var(--radius-tile)] bg-tint-3 text-tintink-3" aria-hidden="true"><BasketIcon width={30} height={30} /></div>
       <h2 className="text-lg font-extrabold">{title}</h2>
       {body && <p className="max-w-sm text-sm text-ink-soft">{body}</p>}
       {action && <div className="mt-3">{action}</div>}
@@ -96,7 +97,7 @@ export function EmptyState({ title, body, action }: { title: string; body?: stri
 export function PageTitle({ children, sub }: { children: ReactNode; sub?: ReactNode }) {
   return (
     <div className="mb-5">
-      <h1 className="font-display text-3xl font-semibold tracking-tight text-brand-600">{children}</h1>
+      <h1 className="text-[28px] font-extrabold leading-tight tracking-[-0.03em]">{children}</h1>
       {sub && <p className="mt-1 text-sm text-ink-soft">{sub}</p>}
     </div>
   )

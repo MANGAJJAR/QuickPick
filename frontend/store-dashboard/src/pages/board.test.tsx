@@ -13,7 +13,7 @@ function boardApi(byStatus: Record<string, ReturnType<typeof orderFixture>[]>) {
 }
 
 describe('Board', () => {
-  it('shows four status columns with counts and the right card in each', async () => {
+  it('shows the status columns with counts and the right card in each', async () => {
     const api = boardApi({
       PLACED: [orderFixture('PLACED', { id: 'aaaaaaaa11' })],
       ACCEPTED: [orderFixture('ACCEPTED', { id: 'bbbbbbbb22' })],
@@ -24,7 +24,7 @@ describe('Board', () => {
     expect(await screen.findByText('#AAAAAAAA')).toBeInTheDocument()
     expect(screen.getByText('#BBBBBBBB')).toBeInTheDocument()
     expect(screen.getByText('#CCCCCCCC')).toBeInTheDocument()
-    expect(screen.getByText('None')).toBeInTheDocument() // empty PREPARING column
+    expect(screen.getAllByText('None')).toHaveLength(2) // empty PREPARING and OUT_FOR_DELIVERY columns
     expect(screen.getByText('Accept order')).toBeInTheDocument()
     expect(screen.getByText('Start preparing')).toBeInTheDocument()
     expect(screen.getByText('Verify pickup')).toBeInTheDocument()

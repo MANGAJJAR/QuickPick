@@ -86,3 +86,36 @@ Allowed in `PLACED`/`ACCEPTED`; releases reserved stock. Else `409 order_not_can
 ```json
 { "data": {"total_pickups":12,"avg_preparation_seconds":210.5,"total_revenue":"940.00","estimated_rider_cost_saved":"420.00","estimate_note":"Illustrative estimate: …"} }
 ```
+
+
+## Arrival, notifications and push
+
+### `POST /customer/orders/{id}/arrival` — `{"status":"ON_THE_WAY","eta_minutes":5}` or `{"status":"ARRIVED"}`
+The customer tells the store they are coming. Allowed only for the owner, while the order is ACCEPTED, PREPARING or READY_FOR_PICKUP (otherwise `409 arrival_not_allowed`). `eta_minutes` (1 to 120) is required for ON_THE_WAY (422 otherwise). Returns the updated Order (`arrival_status`, `arrival_eta_minutes`, `arrival_updated_at`). The store gets a `CUSTOMER_ARRIVING` / `CUSTOMER_ARRIVED` notification only when the signal actually changes. No location is ever sent. `DELETE` on the same path withdraws it. The signal is cleared automatically when the order is completed, cancelled or expired. The store sees it on `GET /store/orders*` and `GET /store/pickup/queue` (`arrival_status`, `arrival_eta_minutes`, `arrival_updated_at`, `expires_at`).
+
+### Notifications
+`GET /customer/notifications`, `PATCH /customer/notifications/{id}/read`, `GET /store/notifications`, `PATCH /store/notifications/{id}/read`. Newest first, paginated; someone else's notification is a 404. Shape: `{id, kind, title, body, order_id, read, created_at}`. Kinds: `ORDER_PLACED` (store), `ORDER_ACCEPTED`, `ORDER_READY`, `ORDER_CANCELLED`, `ORDER_EXPIRED` (customer, and the store for expiry/customer-cancel), `CUSTOMER_ARRIVING`, `CUSTOMER_ARRIVED` (store). They are written in the same transaction as the order change that caused them.
+
+### Push (Firebase Cloud Messaging)
+`POST /customer/devices` and `POST /store/devices` with `{"token": "<FCM registration token>"}` register a device (stored hashed by id in `device_tokens`). After an order change commits, the backend sends the notification to the audience's devices when `FCM_ENABLED=true` (needs Firebase Admin credentials with messaging permission); otherwise it is a no-op and clients fall back to polling `GET …/notifications`. Push is best effort and never fails an order operation. **Not verified against real FCM in this repo.**
+
+### `POST /internal/jobs/expire-orders`
+Header `X-Job-Secret`. Runs one expiry sweep and returns `{expired: [order ids], skipped: n}`. See ORDER_LIFECYCLE.md.
+
+
+## Delivery and the walk-in offer
+
+### `POST /customer/checkout/preview` (extended)
+Body adds optional `location {lat,lng}` (decides the walk-in discount only). `pricing` is the PICKUP price for this customer right now. New fields: `delivery` (the same cart delivered: `delivery_fee`, `total_amount`, no discount), `delivery_eta_minutes`, and `offer` (see below).
+
+### `POST /customer/orders` (extended)
+Body adds `fulfilment` (`PICKUP` default | `DELIVERY`), `delivery_address {line (5-300 chars), lat?, lng?, instructions?}` (required for DELIVERY, else 422), and optional `location`. Errors: `delivery_unavailable` 409 (store has delivery off), `delivery_address_required` 409. Order fields added: `order_type`, `delivery_address`, `delivery_eta_minutes`, `surge_multiplier`, `walk_distance_m`, `dispatched_at`, `delivered_at`. New statuses `OUT_FOR_DELIVERY`, `DELIVERED`.
+
+### `GET /customer/stores/{store_id}/offer?lat=&lng=`
+`{surge_active, eligible, walk_minutes, distance_m, pickup_discount, headline, reasons[], delivery_eta_minutes, sources{}}`. `eligible` = riders are busy AND the customer is within walking distance; `headline` exists only then ("Riders are busy. Walk 3 min and save ₹40").
+
+### Store: `POST /store/orders/{id}/dispatch`, `POST /store/orders/{id}/deliver`
+Delivery orders only (409 for pickups; other stores' orders are 404). See ORDER_LIFECYCLE.md.
+
+### Store: `GET /store/signals`, `PUT /store/signals` (manager)
+`{rider_supply: NORMAL|LOW|VERY_LOW, weather: CLEAR|RAIN|STORM|null}` (null = live weather). Returns the snapshot: `rider_supply, weather, rush_hour, multiplier, surge_active, delivery_eta_minutes, reasons[], sources{}`. Rider supply is simulated; `sources` says so.

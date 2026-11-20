@@ -51,6 +51,33 @@ class Settings(BaseSettings):
     # --- inventory ------------------------------------------------------
     low_stock_threshold: int = 5
 
+    # --- delivery option -------------------------------------------------
+    delivery_fee: Decimal = Decimal("25.00")
+    free_delivery_above: Decimal = Decimal("199.00")  # subtotal at or above this ships free
+    delivery_base_eta_minutes: int = 18
+
+    # --- "riders are busy" dynamic walk-in discount (surge pricing in reverse) ---
+    #: Cap for the pickup discount while riders are scarce AND the customer is within walking distance.
+    max_surge_pickup_discount: Decimal = Decimal("40.00")
+    surge_threshold: Decimal = Decimal("1.25")  # multiplier at or above this counts as "riders are busy"
+    max_surge_multiplier: Decimal = Decimal("1.80")
+    walk_radius_km: float = 1.0  # "within walking distance"
+    walking_speed_kmh: float = 5.0
+    rush_hours: str = "12:30-14:00,19:30-21:30"  # local-time windows with extra rider demand
+    local_utc_offset_minutes: int = 330  # IST
+    weather_enabled: bool = True  # Open-Meteo (no key). False = always clear, unless a store override is set
+    weather_cache_seconds: int = 600
+
+    # --- auto-expiry of uncollected orders ------------------------------
+    placed_expiry_minutes: int = 15  # the store never accepted the order
+    ready_expiry_minutes: int = 30  # the customer never collected a ready order
+    #: In-process sweep interval. 0 disables it; use the scheduler endpoint (POST /internal/jobs/expire-orders) in cloud.
+    expiry_sweep_interval_seconds: int = 60
+    job_secret: SecretStr | None = None  # shared secret for the scheduler endpoint; unset = endpoint disabled
+
+    # --- push notifications ----------------------------------------------
+    fcm_enabled: bool = False  # needs Firebase Admin credentials with messaging permission
+
     # --- Gemini (reserved for the AI module; not wired yet) -----------
     gemini_api_key: SecretStr | None = None
     gemini_model: str = "gemini-2.0-flash"

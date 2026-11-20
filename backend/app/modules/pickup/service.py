@@ -31,7 +31,7 @@ from app.core.security import AuthUser
 from app.modules.inventory.ledger import InventoryLedger
 from app.modules.orders.lifecycle import order_stock_lines, transition_fields
 from app.modules.pickup import crypto
-from app.shared.enums import OrderStatus, VerificationMethod
+from app.shared.enums import OrderStatus, OrderType, VerificationMethod
 from app.shared.models import Order, PickupVerification, utc_now
 from app.shared.repository import serialize
 
@@ -83,6 +83,8 @@ class PickupService:
             order = Order.model_validate(osnap.to_dict())
             if order.customer_id != customer_id:
                 raise NotFoundError("Order not found")
+            if order.order_type != OrderType.PICKUP:
+                raise ConflictError("Delivery orders do not use a pickup code", code="not_a_pickup_order")
             if order.order_status != OrderStatus.READY_FOR_PICKUP:
                 raise ConflictError(
                     "Pickup credential is only available when the order is ready for pickup",
@@ -180,6 +182,8 @@ class PickupService:
                 return reject(TooManyAttemptsError("Too many failed attempts; ask the customer to refresh the code"), "attempts_exhausted")
             if not matches(ver):
                 return reject(InvalidCredentialError(), "mismatch", count_attempt=method is VerificationMethod.OTP)
+            if order.order_type != OrderType.PICKUP:
+                return reject(ConflictError("This is a delivery order", code="not_a_pickup_order"), "not_pickup")
             if order.order_status != OrderStatus.READY_FOR_PICKUP:
                 return reject(ConflictError("Order is not ready for pickup", code="order_not_ready"), "order_not_ready")
 

@@ -33,7 +33,7 @@ export function PasswordField({ label, value, onChange, autoComplete, inputClass
           onClick={() => setVisible((v) => !v)}
           aria-pressed={visible}
           aria-label={visible ? 'Hide password' : 'Show password'}
-          className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg px-3 py-2 text-sm font-bold text-brand-500 hover:bg-brand-50"
+          className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg px-3 py-2 text-sm font-bold text-accent hover:bg-brand-50"
         >
           {visible ? 'Hide' : 'Show'}
         </button>

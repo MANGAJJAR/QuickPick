@@ -2,6 +2,7 @@ import { useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useAnalytics, useQueue } from '../hooks/queries'
 import { formatDuration, formatINR, shortId } from '../lib/format'
+import { ArrivalBadge } from '../components/ArrivalBadge'
 import { StatusChip } from '../components/StatusChip'
 import { Card, EmptyState, ErrorState, PageHeader, Skeleton } from '../components/ui'
 
@@ -11,14 +12,14 @@ export function QueuePage() {
   useEffect(() => { document.title = 'Pickup queue · QuickPick Store' }, [])
 
   const ready = useMemo(
-    () => (queue.data ?? []).filter((e) => e.order_status === 'READY_FOR_PICKUP').sort((a, b) => (b.ready_waiting_seconds ?? 0) - (a.ready_waiting_seconds ?? 0)),
+    () => (queue.data ?? []).filter((e) => e.order_status === 'READY_FOR_PICKUP').sort((a, b) => Number(b.arrival_status === 'ARRIVED') - Number(a.arrival_status === 'ARRIVED') || (b.ready_waiting_seconds ?? 0) - (a.ready_waiting_seconds ?? 0)),
     [queue.data],
   )
   const preparing = (queue.data ?? []).filter((e) => e.order_status === 'ACCEPTED' || e.order_status === 'PREPARING').length
 
   return (
     <div>
-      <PageHeader title="Pickup queue" sub="Ready for pickup, longest waiting first" />
+      <PageHeader title="Pickup queue" sub="Customers who are here come first, then longest waiting" />
       <div className="mb-5 grid gap-4 sm:grid-cols-3">
         <Card className="p-4"><p className="text-sm font-bold text-ink-soft">Waiting at the counter</p><p className="mt-1 text-4xl font-extrabold num">{queue.data ? ready.length : <Skeleton className="h-10 w-12" />}</p></Card>
         <Card className="p-4"><p className="text-sm font-bold text-ink-soft">Being prepared</p><p className="mt-1 text-4xl font-extrabold num">{queue.data ? preparing : <Skeleton className="h-10 w-12" />}</p></Card>
@@ -35,7 +36,7 @@ export function QueuePage() {
         <Card className="overflow-hidden">
           <table className="w-full text-left">
             <thead className="bg-canvas text-xs font-extrabold uppercase tracking-wide text-ink-faint">
-              <tr><th className="p-3">Order</th><th className="p-3">Status</th><th className="p-3">Items</th><th className="p-3">Total</th><th className="p-3">Waiting</th><th className="p-3"><span className="sr-only">Action</span></th></tr>
+              <tr><th className="p-3">Order</th><th className="p-3">Status</th><th className="p-3">Items</th><th className="p-3">Total</th><th className="p-3">Waiting</th><th className="p-3">Customer</th><th className="p-3"><span className="sr-only">Action</span></th></tr>
             </thead>
             <tbody className="divide-y divide-line text-[15px]">
               {ready.map((e, i) => (
@@ -45,7 +46,8 @@ export function QueuePage() {
                   <td className="p-3 num">{e.item_count}</td>
                   <td className="p-3 num">{formatINR(e.total_amount)}</td>
                   <td className="p-3 font-bold num">{formatDuration(e.ready_waiting_seconds)}</td>
-                  <td className="p-3 text-right"><Link className="inline-flex min-h-11 items-center rounded-xl bg-cta-600 px-4 font-bold text-white hover:bg-cta-700" to={`/counter?order=${e.order_id}`}>Verify pickup</Link></td>
+                  <td className="p-3"><ArrivalBadge status={e.arrival_status} eta={e.arrival_eta_minutes} />{!e.arrival_status && <span className="text-xs text-ink-faint">No update</span>}</td>
+                  <td className="p-3 text-right"><Link className="inline-flex min-h-11 items-center rounded-xl bg-cta-600 px-4 font-bold text-white hover:brightness-90" to={`/counter?order=${e.order_id}`}>Verify pickup</Link></td>
                 </tr>
               ))}
             </tbody>

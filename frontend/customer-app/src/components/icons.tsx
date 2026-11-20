@@ -20,3 +20,8 @@ export const MinusIcon = (p: SVGProps<SVGSVGElement>) => <Icon d="M5 12h14" {...
 export const BackIcon = (p: SVGProps<SVGSVGElement>) => <Icon d="M15 5l-7 7 7 7" {...p} />
 export const CloseIcon = (p: SVGProps<SVGSVGElement>) => <Icon d="M6 6l12 12M18 6L6 18" {...p} />
 export const SearchIcon = (p: SVGProps<SVGSVGElement>) => <Icon d="M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM20 20l-4-4" {...p} />
+export const StoreIcon = (p: SVGProps<SVGSVGElement>) => <Icon d="M4 9l1.5-5h13L20 9M4 9v11h16V9M4 9a2.7 2.7 0 0 0 5.3 0 2.7 2.7 0 0 0 5.4 0A2.7 2.7 0 0 0 20 9M10 20v-5h4v5" {...p} />
+export const SunMoonIcon = (p: SVGProps<SVGSVGElement>) => <Icon d="M12 3v2M12 19v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M3 12h2M19 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z" {...p} />
+export const BasketIcon = (p: SVGProps<SVGSVGElement>) => <Icon d="M3 10h18l-2 10H5zM8 10l3-6M16 10l-3-6" {...p} />
+export const WalkIcon = (p: SVGProps<SVGSVGElement>) => <Icon d="M13 4.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zM9 21l2-7-3-2 1-5 4 1 2 3h3M11 14l3 3v4" {...p} />
+export const BikeIcon = (p: SVGProps<SVGSVGElement>) => <Icon d="M5.5 18a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM18.5 18a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM12 17l-2-6h6l2 6M10 11l-1-3H7M15 8h2" {...p} />

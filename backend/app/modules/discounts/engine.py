@@ -34,8 +34,15 @@ class DiscountQuote(BaseModel):
 class DiscountEngine(Protocol):
     """Contract every pricing strategy (mock or AI) must satisfy."""
 
-    async def quote(self, *, store_id: str, subtotal: Decimal) -> DiscountQuote:
-        """Return the pickup discount quote for an order of ``subtotal`` at ``store_id``."""
+    async def quote(
+        self, *, store_id: str, subtotal: Decimal, surge_multiplier: Decimal = Decimal("1"), walkable: bool = False
+    ) -> DiscountQuote:
+        """Return the pickup discount quote for an order of ``subtotal`` at ``store_id``.
+
+        ``surge_multiplier`` (> 1 while riders are scarce) scales the platform's delivery cost, and
+        ``walkable`` says the customer is close enough to collect on foot. Only walkable customers get the
+        higher "riders are busy" discount.
+        """
         ...
 
 
@@ -46,15 +53,26 @@ class ConfigDiscountEngine:
         self._rider_cost = to_money(settings.rider_cost_saved)
         self._ratio = settings.pickup_discount_ratio
         self._max_discount = to_money(settings.max_pickup_discount)
+        self._max_surge_discount = to_money(settings.max_surge_pickup_discount)
+        self._surge_threshold = settings.surge_threshold
         self._fee = to_money(settings.quickpick_fee)
 
-    async def quote(self, *, store_id: str, subtotal: Decimal) -> DiscountQuote:
-        """Compute the quote; the discount can never exceed the order subtotal."""
-        raw = round_to_rupee(self._rider_cost * self._ratio)
-        discount = min(raw, self._max_discount, to_money(subtotal))
+    async def quote(
+        self, *, store_id: str, subtotal: Decimal, surge_multiplier: Decimal = Decimal("1"), walkable: bool = False
+    ) -> DiscountQuote:
+        """Compute the quote; the discount can never exceed the order subtotal.
+
+        While riders are scarce (multiplier at or above the threshold) a walkable customer is priced against the
+        platform's higher delivery cost and gets the higher cap; everyone else keeps the normal rule.
+        """
+        surge = walkable and surge_multiplier >= self._surge_threshold
+        rider_cost = to_money(self._rider_cost * surge_multiplier) if surge else self._rider_cost
+        cap = self._max_surge_discount if surge else self._max_discount
+        raw = round_to_rupee(rider_cost * self._ratio)
+        discount = min(raw, cap, to_money(subtotal))
         return DiscountQuote(
-            rider_cost_saved=self._rider_cost,
+            rider_cost_saved=rider_cost,
             pickup_discount=discount,
             quickpick_fee=self._fee,
-            platform_net_saving=to_money(self._rider_cost - discount - self._fee),
+            platform_net_saving=to_money(rider_cost - discount - self._fee),
         )

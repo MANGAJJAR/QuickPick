@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ApiError } from '../api/client'
+import { PushToggle } from '../components/PushToggle'
 import { useMarkNotificationRead, useNotifications } from '../hooks/queries'
 import { formatDateTime } from '../lib/format'
 import { Button, Card, EmptyState, ErrorState, PageHeader, Pill, Skeleton } from '../components/ui'
@@ -11,12 +12,13 @@ export function NotificationsPage() {
   const navigate = useNavigate()
   useEffect(() => { document.title = 'Alerts · QuickPick Store' }, [])
 
-  // The backend has no notifications endpoints yet (dark-store module backlog). Say so honestly.
+  // Older backends have no notification endpoints; keep an honest fallback instead of an error.
   const unavailable = list.error instanceof ApiError && (list.error.status === 404 || list.error.status === 405)
 
   return (
     <div className="mx-auto max-w-3xl">
       <PageHeader title="Alerts" />
+      <PushToggle />
       {list.isPending ? (
         <div className="space-y-3" aria-busy="true">{[0, 1, 2].map((i) => <Skeleton key={i} className="h-20 w-full" />)}</div>
       ) : unavailable ? (

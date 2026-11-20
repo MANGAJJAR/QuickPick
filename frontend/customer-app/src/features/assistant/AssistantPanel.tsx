@@ -6,6 +6,7 @@ import { CloseIcon } from '../../components/icons'
 import { Badge, Button, ErrorState } from '../../components/ui'
 import { config } from '../../config'
 import { useAllStores, useProducts } from '../../hooks/queries'
+import { ProductArt } from '../../components/ProductArt'
 import { formatINR, stockState } from '../../lib/format'
 
 interface Message {
@@ -15,6 +16,7 @@ interface Message {
 }
 
 const EXAMPLE = '2 milk, bread, pickup in 10 min'
+const EXAMPLE_TYPO = 'Spelling mistakes are fine: “2 mlk, brwn bred, paner”'
 
 /** Chat UI. The responder is `assistantAdapter` (currently a labelled MOCK, not Gemini). */
 export default function AssistantPanel({ onClose }: { onClose(): void }) {
@@ -25,7 +27,7 @@ export default function AssistantPanel({ onClose }: { onClose(): void }) {
   const [input, setInput] = useState('')
   const [busy, setBusy] = useState(false)
   const [messages, setMessages] = useState<Message[]>([
-    { from: 'bot', text: `Tell me what you need, like "${EXAMPLE}".` },
+    { from: 'bot', text: `Tell me what you need, like "${EXAMPLE}". ${EXAMPLE_TYPO}. You can also type a category, like "snacks".` },
   ])
   const endRef = useRef<HTMLDivElement>(null)
   const closeRef = useRef<HTMLButtonElement>(null)
@@ -77,7 +79,7 @@ export default function AssistantPanel({ onClose }: { onClose(): void }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 sm:items-center sm:p-4" onClick={onClose}>
-      <section role="dialog" aria-modal="true" aria-label="Shopping assistant" onClick={(e) => e.stopPropagation()} className="anim-pop flex h-[85vh] w-full max-w-md flex-col overflow-hidden rounded-t-3xl bg-surface shadow-2xl sm:h-[640px] sm:rounded-3xl">
+      <section role="dialog" aria-modal="true" aria-label="Shopping assistant" onClick={(e) => e.stopPropagation()} className="anim-pop flex h-[85vh] w-full max-w-md flex-col overflow-hidden rounded-t-3xl bg-surface sm:h-[640px] sm:rounded-3xl">
         <header className="flex items-start justify-between gap-3 border-b border-line p-4">
           <div>
             <h2 className="text-lg font-bold">Shopping assistant</h2>
@@ -102,10 +104,21 @@ export default function AssistantPanel({ onClose }: { onClose(): void }) {
               <p className={`inline-block max-w-[85%] rounded-2xl px-4 py-2.5 text-sm ${m.from === 'user' ? 'bg-brand-600 text-white' : 'bg-canvas'}`}>{m.text}</p>
               {m.reply && m.reply.suggestions.length > 0 && (
                 <div className="mt-2 rounded-xl border border-line p-3 text-left text-sm">
-                  <ul className="space-y-1">
-                    {m.reply.suggestions.map((s) => (
-                      <li key={s.product.product.id} className="flex justify-between"><span>{s.quantity} × {s.product.product.name}</span><span className="num">{formatINR(s.product.product.price)}</span></li>
-                    ))}
+                  <ul className="space-y-2">
+                    {m.reply.suggestions.map((s) => {
+                      const p = s.product.product
+                      const stock = stockState(s.product.pickable_quantity, config.lowStockThreshold)
+                      return (
+                        <li key={p.id} className="flex items-center gap-3">
+                          <ProductArt id={p.id} name={p.name} category={p.category} className="h-11 w-11 shrink-0" />
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate font-bold">{s.quantity} × {p.name}</span>
+                            <span className="block text-xs text-ink-faint">{p.unit} · {stock.label}{s.matchedFrom ? ` · for “${s.matchedFrom}”` : ''}</span>
+                          </span>
+                          <span className="num font-bold">{formatINR(p.price)}</span>
+                        </li>
+                      )
+                    })}
                   </ul>
                   {m.reply.unmatched.length > 0 && <p className="mt-2 text-xs text-warn-600">Couldn’t find: {m.reply.unmatched.join(', ')}</p>}
                   {m.reply.pickupInMinutes !== null && <p className="mt-2 text-xs text-ink-faint">You asked for pickup in {m.reply.pickupInMinutes} min. Pickup slots aren’t bookable yet, so the store will prepare it as soon as possible.</p>}

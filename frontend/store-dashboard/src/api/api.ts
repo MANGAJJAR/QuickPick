@@ -6,6 +6,9 @@ import type {
   OrderStatus,
   Page,
   QueueEntry,
+  RiderSupply,
+  Signals,
+  Weather,
   Store,
   StoreOperatingStatus,
 } from './types'
@@ -39,6 +42,14 @@ export interface Api {
   rejectOrder(id: string, reason?: string): Promise<Order>
   startPreparation(id: string): Promise<Order>
   markReady(id: string): Promise<Order>
+  /** Delivery orders: packed -> a rider has the bag. */
+  dispatchOrder(id: string): Promise<Order>
+  /** Delivery orders: delivered (stock is deducted). */
+  deliverOrder(id: string): Promise<Order>
+
+  getSignals(): Promise<Signals>
+  /** Manager only. Rider supply is simulated: there is no live rider feed yet. `weather: null` = use live weather. */
+  setSignals(riderSupply: RiderSupply, weather: Weather | null): Promise<Signals>
 
   verifyQr(qrPayload: string): Promise<Order>
   verifyOtp(orderId: string, otp: string): Promise<Order>
@@ -55,6 +66,8 @@ export interface Api {
 
   listNotifications(): Promise<AppNotification[]>
   markNotificationRead(id: string): Promise<void>
+  /** Register this device for push alerts (FCM token). */
+  registerDevice(token: string): Promise<void>
 
   demo?: DemoHelpers
 }

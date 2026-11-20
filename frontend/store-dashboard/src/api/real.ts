@@ -1,6 +1,6 @@
 import type { Api } from './api'
 import type { Http } from './client'
-import type { AnalyticsOverview, AppNotification, InventoryRow, Order, QueueEntry, Store } from './types'
+import type { AnalyticsOverview, AppNotification, InventoryRow, Order, QueueEntry, RiderSupply, Signals, Store, Weather } from './types'
 
 const enc = encodeURIComponent
 
@@ -43,6 +43,19 @@ export function createRealApi(http: Http): Api {
       return (await post<Order>(`/store/orders/${enc(id)}/ready`)).data
     },
 
+    async dispatchOrder(id) {
+      return (await post<Order>(`/store/orders/${enc(id)}/dispatch`)).data
+    },
+    async deliverOrder(id) {
+      return (await post<Order>(`/store/orders/${enc(id)}/deliver`)).data
+    },
+    async getSignals() {
+      return (await get<Signals>('/store/signals')).data
+    },
+    async setSignals(riderSupply: RiderSupply, weather: Weather | null) {
+      return (await http.request<Signals>('PUT', '/store/signals', { body: { rider_supply: riderSupply, weather } })).data
+    },
+
     async verifyQr(qrPayload) {
       return (await post<Order>('/store/pickup/verify-qr', { qr_payload: qrPayload })).data
     },
@@ -74,12 +87,14 @@ export function createRealApi(http: Http): Api {
       return (await get<AnalyticsOverview>('/store/analytics/overview')).data
     },
 
-    // Not implemented by the backend yet: these 404 and the UI shows an honest "unavailable" state.
     async listNotifications() {
       return (await get<AppNotification[]>('/store/notifications')).data
     },
     async markNotificationRead(id) {
       await patch(`/store/notifications/${enc(id)}/read`)
+    },
+    async registerDevice(token) {
+      await post('/store/devices', { token })
     },
   }
 }

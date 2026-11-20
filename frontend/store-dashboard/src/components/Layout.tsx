@@ -2,10 +2,13 @@ import { useState } from 'react'
 import { Link, NavLink, Outlet } from 'react-router-dom'
 import { useApi } from '../api/context'
 import { useAuth } from '../auth/AuthContext'
+import { AlertToasts } from '../features/alerts/AlertToasts'
 import { useBoard, useLowStock, useNotifications, useStore } from '../hooks/queries'
 import { useOnline } from '../hooks/utility'
+import { useTheme } from '../lib/theme'
 import { setSoundEnabled, soundEnabled } from '../lib/sound'
-import { BellIcon, BoardIcon, BoxIcon, ChartIcon, GridIcon, QueueIcon, ScanIcon } from './icons'
+import { Logo } from './Logo'
+import { BellIcon, BoardIcon, BoxIcon, ChartIcon, GridIcon, QueueIcon, ScanIcon, SunMoonIcon } from './icons'
 
 function Count({ n, tone = 'bg-wheat-300 text-brand-700' }: { n: number; tone?: string }) {
   if (n <= 0) return null
@@ -21,6 +24,7 @@ export function Layout() {
   const low = useLowStock()
   const notifications = useNotifications()
   const [sound, setSound] = useState(soundEnabled)
+  const theme = useTheme()
 
   const newOrders = board.data?.PLACED.length ?? 0
   const lowCount = low.data?.length ?? 0
@@ -40,20 +44,20 @@ export function Layout() {
     <div className="flex min-h-dvh">
       <aside className="sticky top-0 flex h-dvh w-16 shrink-0 flex-col bg-rail text-white md:w-60" aria-label="Sidebar">
         <div className="flex h-16 items-center gap-2.5 px-4">
-          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-wheat-300 text-brand-600"><BoxIcon /></span>
+          <Logo />
           <div className="hidden min-w-0 md:block">
             <p className="truncate font-display text-lg font-semibold leading-tight">Quick<span className="text-wheat-300">Pick</span> Store</p>
             <p className="truncate text-xs text-white/60">{store.data?.name}</p>
           </div>
         </div>
 
-        <Link to="/counter" className="mx-3 mb-3 flex min-h-14 items-center justify-center gap-2 rounded-xl bg-cta-600 px-3 font-extrabold text-white shadow-sm transition hover:bg-cta-700" aria-label="Open pickup counter mode">
+        <Link to="/counter" className="mx-3 mb-3 flex min-h-14 items-center justify-center gap-2 rounded-xl bg-cta-600 px-3 font-extrabold text-white transition hover:brightness-90" aria-label="Open pickup counter mode">
           <ScanIcon size={24} /><span className="hidden md:inline">Pickup counter</span>
         </Link>
 
         <nav aria-label="Main" className="flex-1 space-y-1 px-2">
           {nav.map(({ to, label, icon: I, end, count }) => (
-            <NavLink key={to} to={to} end={end} aria-label={label} className={({ isActive }) => `flex min-h-12 items-center gap-3 rounded-xl px-3 text-[15px] font-bold ${isActive ? 'bg-wheat-300 text-brand-600' : 'text-white/75 hover:bg-white/10'}`}>
+            <NavLink key={to} to={to} end={end} aria-label={label} className={({ isActive }) => `flex min-h-12 items-center gap-3 rounded-xl px-3 text-[15px] font-bold ${isActive ? 'bg-wheat-300 text-brand-700' : 'text-white/75 hover:bg-white/10'}`}>
               <I size={22} /><span className="hidden md:inline">{label}</span>
               <span className="hidden md:ml-auto md:block"><Count n={count} tone={to === '/inventory' ? 'bg-danger-600 text-white' : undefined} /></span>
             </NavLink>
@@ -87,6 +91,7 @@ export function Layout() {
             >
               New-order sound: {sound ? 'On' : 'Off'}
             </button>
+            <button onClick={theme.cycle} className="grid h-10 w-10 place-items-center rounded-lg border-2 border-line" aria-label={`Theme: ${theme.choice === 'auto' ? 'follows your device' : theme.choice}. Switch theme`} title={`Theme: ${theme.choice}`}><SunMoonIcon /></button>
             <Link to="/notifications" className="relative grid h-10 w-10 place-items-center rounded-lg border-2 border-line" aria-label={unread > 0 ? `Alerts, ${unread} unread` : 'Alerts'}>
               <BellIcon />
               {unread > 0 && <span data-testid="header-unread" className="absolute -right-1.5 -top-1.5 grid h-5 min-w-5 place-items-center rounded-full bg-danger-600 px-1 text-[11px] font-extrabold text-white num">{unread > 9 ? '9+' : unread}</span>}
@@ -95,6 +100,7 @@ export function Layout() {
         </header>
 
         <main className="flex-1 p-5"><Outlet /></main>
+        <AlertToasts />
       </div>
     </div>
   )

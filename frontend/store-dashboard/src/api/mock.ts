@@ -10,8 +10,7 @@ import type {
   OrderStatus,
   Page,
   QueueEntry,
-  Store,
-} from './types'
+  Store, DeliveryAddress, OrderType, RiderSupply, Signals, Weather } from './types'
 
 /**
  * MOCK BACKEND (VITE_USE_MOCKS=true): a fake server running in the browser so the dashboard can be
@@ -47,7 +46,10 @@ export function createMockApi(): Api {
   const notifications: AppNotification[] = []
   let lastUsedQr: string | null = null
 
-  const OPEN: OrderStatus[] = ['PLACED', 'ACCEPTED', 'PREPARING', 'READY_FOR_PICKUP']
+  const OPEN: OrderStatus[] = ['PLACED', 'ACCEPTED', 'PREPARING', 'READY_FOR_PICKUP', 'OUT_FOR_DELIVERY']
+  const ADDRESSES = ['12 Green Park Society, Satellite', 'B-404 Shivalik Heights, Jodhpur Cross Roads', '7 Anand Nagar Society, Prahlad Nagar', '21 Shyamal Row Houses, Satellite']
+  // Demo signals: rider supply is simulated here exactly as it is in the real backend (no live rider feed yet).
+  const signalState: { supply: RiderSupply; weather: Weather | null } = { supply: 'NORMAL', weather: null }
   const reservedFor = (pid: string) =>
     orders.filter((o) => OPEN.includes(o.order_status)).reduce((n, o) => n + (o.items.find((i) => i.product_id === pid)?.quantity ?? 0), 0)
 
@@ -57,7 +59,7 @@ export function createMockApi(): Api {
     return { store_id: store.id, product_id: pid, available_quantity: s.available, reserved_quantity: reserved, pickable_quantity: s.available - reserved, updated_at: s.updated }
   }
 
-  function makeOrder(lines: [string, number][], status: OrderStatus, ageMs: number): Order {
+  function makeOrder(lines: [string, number][], status: OrderStatus, ageMs: number, type: OrderType = 'PICKUP'): Order {
     const items: OrderItem[] = lines.map(([pid, qty]) => ({
       product_id: pid, name: CATALOGUE[pid]!.name, unit_price: CATALOGUE[pid]!.price, quantity: qty, line_total: rupees(paise(CATALOGUE[pid]!.price) * qty),
     }))
@@ -66,20 +68,27 @@ export function createMockApi(): Api {
     const created = Date.now() - ageMs
     const history = [{ status: 'CREATED' as const, at: iso(created), actor_uid: 'cust', note: null }, { status: 'PLACED' as const, at: iso(created), actor_uid: 'cust', note: null }]
     return {
-      id: rid(), customer_id: `cust-${rid().slice(0, 6)}`, store_id: store.id, items, subtotal: rupees(subtotal), delivery_fee: '0.00',
-      pickup_discount: rupees(discount), pickup_fee: '4.00', total_amount: rupees(subtotal - discount), order_type: 'PICKUP', order_status: status,
+      id: rid(), customer_id: `cust-${rid().slice(0, 6)}`, store_id: store.id, items, subtotal: rupees(subtotal),
+      pickup_discount: rupees(type === 'DELIVERY' ? 0 : discount), pickup_fee: type === 'DELIVERY' ? '0.00' : '4.00', delivery_fee: type === 'DELIVERY' && subtotal < 19900 ? '25.00' : '0.00',
+      total_amount: rupees(type === 'DELIVERY' ? subtotal + (subtotal < 19900 ? 2500 : 0) : subtotal - discount), order_type: type, order_status: status,
+      delivery_address: type === 'DELIVERY' ? ({ line: ADDRESSES[Math.floor(Math.random() * ADDRESSES.length)]!, instructions: Math.random() > 0.5 ? 'Ring the bell' : null } as DeliveryAddress) : null,
+      delivery_eta_minutes: type === 'DELIVERY' ? 24 : null,
       pickup_code_reference: null, idempotency_key: `k-${rid().slice(0, 8)}`, status_history: history, cancel_reason: null, accepted_at: null,
-      preparing_at: null, ready_at: null, completed_at: null, cancelled_at: null, expired_at: null, created_at: iso(created), updated_at: iso(created),
+      preparing_at: null, ready_at: null, completed_at: null, cancelled_at: null, expired_at: null, expires_at: iso(created + 15 * 60_000),
+      arrival_status: null, arrival_eta_minutes: null, arrival_updated_at: null, created_at: iso(created), updated_at: iso(created),
     }
   }
 
   function advance(o: Order, to: OrderStatus, note: string | null = null, at = Date.now()) {
     o.order_status = to
     o.status_history = [...o.status_history, { status: to, at: iso(at), actor_uid: 'mock-staff', note }]
-    const field = { ACCEPTED: 'accepted_at', PREPARING: 'preparing_at', READY_FOR_PICKUP: 'ready_at', COMPLETED: 'completed_at', CANCELLED: 'cancelled_at' }[to as string]
+    const field = { ACCEPTED: 'accepted_at', PREPARING: 'preparing_at', READY_FOR_PICKUP: 'ready_at', OUT_FOR_DELIVERY: 'dispatched_at', DELIVERED: 'delivered_at', COMPLETED: 'completed_at', CANCELLED: 'cancelled_at' }[to as string]
     if (field) (o as unknown as Record<string, string>)[field] = iso(at)
     o.updated_at = iso(at)
-    if (to === 'READY_FOR_PICKUP') issue(o)
+    if (to === 'READY_FOR_PICKUP' && o.order_type === 'PICKUP') issue(o)
+    // Same rules as the backend: only PLACED and READY have a deadline; finished orders drop the arrival signal.
+    o.expires_at = to === 'READY_FOR_PICKUP' && o.order_type === 'PICKUP' ? iso(at + 30 * 60_000) : null
+    if (to === 'COMPLETED' || to === 'DELIVERED' || to === 'CANCELLED') { o.arrival_status = null; o.arrival_eta_minutes = null }
   }
 
   function issue(o: Order) {
@@ -93,9 +102,10 @@ export function createMockApi(): Api {
     const picks = Object.keys(CATALOGUE).sort(() => Math.random() - 0.5).slice(0, 1 + Math.floor(Math.random() * 3))
     const lines: [string, number][] = picks.map((p) => [p, 1 + Math.floor(Math.random() * 3)])
     if (lines.some(([p, q]) => row(p).pickable_quantity < q)) return
-    const o = makeOrder(lines, 'PLACED', 0)
+    const type: OrderType = Math.random() < 0.34 ? 'DELIVERY' : 'PICKUP'
+    const o = makeOrder(lines, 'PLACED', 0, type)
     orders.unshift(o)
-    notifications.unshift({ id: rid(), title: 'New pickup order', body: `Order #${o.id.slice(0, 8).toUpperCase()} was placed.`, order_id: o.id, read: false, created_at: iso() })
+    notifications.unshift({ id: rid(), title: type === 'DELIVERY' ? 'New delivery order' : 'New pickup order', body: `Order #${o.id.slice(0, 8).toUpperCase()} was placed.`, order_id: o.id, read: false, created_at: iso() })
   }
 
   // --- seed: history for analytics + a live board ---
@@ -117,12 +127,28 @@ export function createMockApi(): Api {
     [[['tomato', 2], ['pav', 1]], 'PREPARING', 480_000],
     [[['cola', 2], ['milk', 1]], 'READY_FOR_PICKUP', 900_000],
   ]
+  const deliverySeeds: [[string, number][], OrderStatus, number][] = [
+    [[['bread', 2], ['milk', 2]], 'PREPARING', 360_000],
+    [[['eggs', 1], ['tomato', 3]], 'READY_FOR_PICKUP', 600_000],
+    [[['chips', 2], ['cola', 1]], 'OUT_FOR_DELIVERY', 1_100_000],
+  ]
+  for (const [lines, status, age] of deliverySeeds) {
+    const o = makeOrder(lines, 'PLACED', age, 'DELIVERY')
+    const base = Date.parse(o.created_at)
+    advance(o, 'ACCEPTED', null, base + 30_000)
+    if (status !== 'PREPARING' || true) advance(o, 'PREPARING', null, base + 90_000)
+    if (status === 'READY_FOR_PICKUP' || status === 'OUT_FOR_DELIVERY') advance(o, 'READY_FOR_PICKUP', null, base + 300_000)
+    if (status === 'OUT_FOR_DELIVERY') advance(o, 'OUT_FOR_DELIVERY', null, base + 420_000)
+    orders.unshift(o)
+  }
   for (const [lines, status, age] of seeds) {
     const o = makeOrder(lines, 'PLACED', age)
     const base = Date.parse(o.created_at)
     if (status !== 'PLACED') advance(o, 'ACCEPTED', null, base + 30_000)
     if (status === 'PREPARING' || status === 'READY_FOR_PICKUP') advance(o, 'PREPARING', null, base + 90_000)
     if (status === 'READY_FOR_PICKUP') advance(o, 'READY_FOR_PICKUP', null, base + 300_000)
+    if (status === 'ACCEPTED') { o.arrival_status = 'ON_THE_WAY'; o.arrival_eta_minutes = 6; o.arrival_updated_at = iso(Date.now() - 60_000) }
+    if (status === 'READY_FOR_PICKUP') { o.arrival_status = 'ARRIVED'; o.arrival_updated_at = iso(Date.now() - 20_000) }
     orders.unshift(o)
   }
   notifications.push({ id: rid(), title: 'Welcome', body: 'Mock mode: new orders arrive about every 20 seconds.', order_id: null, read: false, created_at: iso() })
@@ -150,6 +176,23 @@ export function createMockApi(): Api {
     advance(o, 'COMPLETED')
     return structuredClone(o)
   }
+  /** Same arithmetic as the backend: supply, weather and the evening rush add up to a multiplier that stretches delivery ETAs. */
+  function signals(): Signals {
+    const supplyAdd = { NORMAL: 0, LOW: 0.3, VERY_LOW: 0.6 }[signalState.supply]
+    const weather: Weather = signalState.weather ?? 'CLEAR'
+    const weatherAdd = { CLEAR: 0, RAIN: 0.3, STORM: 0.5 }[weather]
+    const multiplier = Math.min(1 + supplyAdd + weatherAdd, 1.8)
+    const reasons: string[] = []
+    if (signalState.supply === 'LOW') reasons.push('Few riders are available')
+    if (signalState.supply === 'VERY_LOW') reasons.push('Almost no riders are available')
+    if (weather === 'RAIN') reasons.push('Rain is slowing riders')
+    if (weather === 'STORM') reasons.push('Storms are slowing riders')
+    return {
+      rider_supply: signalState.supply, weather, rush_hour: false, multiplier: multiplier.toFixed(2), surge_active: multiplier >= 1.25,
+      delivery_eta_minutes: 18 + Math.round((multiplier - 1) * 30), reasons,
+      sources: { rider_supply: 'simulated (set by the store; no live rider feed yet)', weather: signalState.weather ? 'override' : 'demo data', rush_hour: 'schedule' },
+    }
+  }
   const page = <T>(items: T[]): Page<T> => ({ items, pagination: { limit: items.length, next_cursor: null, has_more: false } })
 
   return {
@@ -169,6 +212,31 @@ export function createMockApi(): Api {
     async rejectOrder(id, reason) { await sleep(LATENCY); return move(id, ['PLACED'], 'CANCELLED', reason ?? 'Rejected by store') },
     async startPreparation(id) { await sleep(LATENCY); return move(id, ['ACCEPTED'], 'PREPARING') },
     async markReady(id) { await sleep(LATENCY); return move(id, ['PREPARING'], 'READY_FOR_PICKUP') },
+    async dispatchOrder(id) {
+      await sleep(LATENCY)
+      if (find(id).order_type !== 'DELIVERY') throw new ApiError(409, 'invalid_status_transition', 'This action is only for delivery orders')
+      return move(id, ['READY_FOR_PICKUP'], 'OUT_FOR_DELIVERY')
+    },
+    async deliverOrder(id) {
+      await sleep(LATENCY)
+      const o = find(id)
+      if (o.order_type !== 'DELIVERY') throw new ApiError(409, 'invalid_status_transition', 'Pickup orders are completed at the counter')
+      if (o.order_status !== 'OUT_FOR_DELIVERY') throw new ApiError(409, 'invalid_status_transition', `Cannot move order from ${o.order_status} to DELIVERED`)
+      for (const i of o.items) {
+        const st = stock.get(i.product_id)!
+        st.available -= i.quantity
+        st.updated = iso()
+      }
+      advance(o, 'DELIVERED')
+      return structuredClone(o)
+    },
+    async getSignals() { await sleep(LATENCY / 2); return signals() },
+    async setSignals(riderSupply, weather) {
+      await sleep(LATENCY)
+      signalState.supply = riderSupply
+      signalState.weather = weather
+      return signals()
+    },
 
     async verifyQr(payload) {
       await sleep(LATENCY * 2)
@@ -202,7 +270,7 @@ export function createMockApi(): Api {
       await sleep(LATENCY)
       const now = Date.now()
       const q: QueueEntry[] = orders
-        .filter((o) => OPEN.includes(o.order_status))
+        .filter((o) => OPEN.includes(o.order_status) && o.order_type === 'PICKUP')
         .sort((a, b) => a.created_at.localeCompare(b.created_at))
         .map((o) => {
           const start = o.preparing_at ?? o.accepted_at
@@ -211,6 +279,7 @@ export function createMockApi(): Api {
             order_id: o.id, order_status: o.order_status, item_count: o.items.reduce((n, i) => n + i.quantity, 0), total_amount: o.total_amount,
             placed_at: o.created_at, preparation_elapsed_seconds: start ? Math.max(0, Math.floor((end - Date.parse(start)) / 1000)) : null,
             ready_waiting_seconds: o.ready_at ? Math.max(0, Math.floor((now - Date.parse(o.ready_at)) / 1000)) : null,
+            arrival_status: o.arrival_status ?? null, arrival_eta_minutes: o.arrival_eta_minutes ?? null, arrival_updated_at: o.arrival_updated_at ?? null, expires_at: o.expires_at ?? null,
           }
         })
       return q
@@ -257,6 +326,7 @@ export function createMockApi(): Api {
 
     async listNotifications() { await sleep(LATENCY / 2); return structuredClone(notifications) },
     async markNotificationRead(id) { await sleep(60); const n = notifications.find((x) => x.id === id); if (n) n.read = true },
+    async registerDevice() { await sleep(60) },
 
     demo: {
       credentials(): DemoCredential[] {

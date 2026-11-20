@@ -72,7 +72,7 @@ function AddItemDialog({ onClose }: { onClose(): void }) {
     <div className="fixed inset-0 z-50 grid place-items-center bg-ink/50 p-4">
       <form
         role="dialog" aria-modal="true" aria-labelledby="add-title"
-        className="anim-pop w-full max-w-md space-y-3 rounded-xl bg-surface p-5 shadow-2xl"
+        className="anim-pop w-full max-w-md space-y-3 rounded-xl bg-surface p-5"
         onSubmit={(e) => { e.preventDefault(); if (check.ok && productId.trim()) add.mutate({ productId: productId.trim(), quantity: check.value }, { onSuccess: onClose }) }}
       >
         <h2 id="add-title" className="text-xl font-extrabold">Add item to this store</h2>

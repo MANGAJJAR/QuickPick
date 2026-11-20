@@ -18,6 +18,8 @@ from app.core.exceptions import ServiceUnavailableError, register_exception_hand
 from app.core.firebase import create_firestore_client, init_firebase_admin
 from app.core.logging import configure_logging, request_id_var
 from app.core.security import FirebaseTokenVerifier, TokenVerifier
+from app.modules.notifications.push import FcmPushSender, NoopPushSender, PushDispatcher
+from app.modules.orders.expiry import ExpiryService, run_expiry_loop
 from app.shared.schemas import ok
 
 logger = logging.getLogger("quickpick")
@@ -39,8 +41,17 @@ def create_app(
         else:
             app.state.db = db
         app.state.token_verifier = token_verifier or FirebaseTokenVerifier(settings)
+        sweeper: asyncio.Task | None = None
+        if settings.expiry_sweep_interval_seconds > 0:
+            sender = getattr(app.state, "push_sender", None) or (FcmPushSender() if settings.fcm_enabled else NoopPushSender())
+            service = ExpiryService(app.state.db, settings, push=PushDispatcher(app.state.db, sender))
+            sweeper = asyncio.create_task(run_expiry_loop(service, settings.expiry_sweep_interval_seconds))
         logger.info("startup_complete", extra={"fields": {"environment": settings.environment}})
-        yield
+        try:
+            yield
+        finally:
+            if sweeper is not None:
+                sweeper.cancel()
 
     app = FastAPI(title=settings.app_name, version="0.1.0", lifespan=lifespan)
     # Also set eagerly so dependency overrides / TestClient without lifespan still work.

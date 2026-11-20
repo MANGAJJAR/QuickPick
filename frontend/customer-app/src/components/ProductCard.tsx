@@ -1,62 +1,58 @@
-import { useState } from 'react'
 import type { ProductView, Store } from '../api/types'
 import { useCart } from '../cart/CartContext'
 import { config } from '../config'
 import { formatINR, stockState } from '../lib/format'
-import { categoryEmoji } from '../lib/categories'
+import { ProductArt } from './ProductArt'
 import { QuantityStepper } from './QuantityStepper'
-
-// Palette-only tile tints. There are no product photos yet, so each tile gets a category emoji.
-const TINTS = ['bg-wheat-100', 'bg-brand-50', 'bg-cta-50', 'bg-wheat-50', 'bg-brand-100']
-function hash(s: string): number {
-  let h = 0
-  for (const c of s) h = (h * 31 + c.charCodeAt(0)) % 9973
-  return h
-}
+import { useToast } from './Toast'
 
 export function ProductCard({ view, store }: { view: ProductView; store: Store }) {
   const cart = useCart()
+  const toast = useToast()
   const { product } = view
   const stock = stockState(view.pickable_quantity, config.lowStockThreshold)
   const line = cart.cart.store?.id === store.id ? cart.cart.items.find((i) => i.productId === product.id) : undefined
   const orderable = store.operating_status === 'OPEN'
-  const [note, setNote] = useState<string | null>(null)
+  const out = stock.kind === 'out'
 
   function add() {
     const res = cart.add(
       { id: store.id, name: store.name },
       { productId: product.id, name: product.name, unit: product.unit, unitPrice: product.price, maxQty: stock.max },
     )
-    setNote(res === 'limit' ? `Only ${stock.max} available` : null)
+    toast.show(res === 'limit' ? `Only ${stock.max} available` : 'Added to cart')
+    try { navigator.vibrate?.(8) } catch { /* haptics are optional */ }
   }
 
   return (
-    <article className={`group flex h-full flex-col overflow-hidden rounded-card border border-line bg-surface shadow-soft transition hover:shadow-lift ${stock.kind === 'out' ? 'opacity-75' : ''}`}>
-      <div className={`relative grid aspect-[5/4] place-items-center ${TINTS[hash(product.category) % TINTS.length]}`} aria-hidden="true">
-        <span className={`text-5xl transition-transform group-hover:scale-110 ${stock.kind === 'out' ? 'grayscale' : ''}`}>{categoryEmoji(product.category)}</span>
-        {stock.kind === 'low' && <span className="absolute left-2 top-2 rounded-full bg-wheat-300 px-2 py-0.5 text-[11px] font-extrabold text-brand-700">{stock.label}</span>}
-        {stock.kind === 'out' && <span className="absolute left-2 top-2 rounded-full bg-ink px-2 py-0.5 text-[11px] font-extrabold text-white">{stock.label}</span>}
+    <article className="flex h-full flex-col rounded-card border border-line bg-surface p-2.5">
+      <div className="relative">
+        <ProductArt id={product.id} name={product.name} category={product.category} dim={out} className="aspect-square w-full" />
+        {stock.kind === 'low' && <span className="absolute bottom-2 left-2 rounded-full bg-surface px-2 py-0.5 text-xs font-semibold italic text-warn-600">{stock.label}</span>}
+        {out && <span className="absolute bottom-2 left-2 rounded-full bg-bar px-2 py-0.5 text-xs font-bold text-white">Out of stock</span>}
       </div>
-      <div className="flex flex-1 flex-col p-3">
-        <h3 className="line-clamp-2 min-h-10 text-[15px] font-bold leading-5">{product.name}</h3>
-        <p className="mt-0.5 text-xs font-medium text-ink-faint">{product.unit}</p>
+      <div className="flex flex-1 flex-col px-1 pt-2.5">
+        <h3 className="line-clamp-2 min-h-10 text-base font-bold leading-5">{product.name}</h3>
+        <p className="mt-0.5 text-sm italic text-ink-faint">{product.unit}</p>
         {stock.kind === 'in' && <span className="sr-only">{stock.label}</span>}
         <div className="mt-auto flex items-end justify-between gap-2 pt-3">
-          <span className="text-lg font-extrabold num">{formatINR(product.price)}</span>
-          {line ? (
-            <QuantityStepper size="sm" quantity={line.quantity} max={line.maxQty} label={product.name} onChange={(q) => cart.setQty(product.id, q)} />
-          ) : (
-            <button
-              onClick={add}
-              disabled={stock.kind === 'out' || !orderable}
-              aria-label={`Add ${product.name} to cart`}
-              className="min-h-9 min-w-[4.5rem] rounded-xl border-2 border-cta-600 bg-cta-50 px-4 text-sm font-extrabold uppercase tracking-wide text-cta-700 transition hover:bg-cta-600 hover:text-white active:scale-95 disabled:cursor-not-allowed disabled:border-line disabled:bg-canvas disabled:text-ink-faint"
-            >
-              {stock.kind === 'out' ? 'Sold out' : 'Add'}
-            </button>
-          )}
+          <span className="text-[17px] font-extrabold num">{formatINR(product.price)}</span>
+          {/* Fixed width so swapping Add for the stepper never shifts the layout. */}
+          <div className="flex h-10 w-[5.75rem] items-center justify-end">
+            {line ? (
+              <QuantityStepper size="sm" quantity={line.quantity} max={line.maxQty} label={product.name} onChange={(q) => cart.setQty(product.id, q)} />
+            ) : (
+              <button
+                onClick={add}
+                disabled={out || !orderable}
+                aria-label={`Add ${product.name} to cart`}
+                className="h-10 w-full rounded-xl border-2 border-cta-600 px-3 text-sm font-bold text-cta-ink transition-colors hover:bg-cta-50 active:scale-95 disabled:cursor-not-allowed disabled:border-line disabled:text-ink-faint disabled:hover:bg-transparent"
+              >
+                {out ? 'Sold out' : 'Add'}
+              </button>
+            )}
+          </div>
         </div>
-        {note && <p role="status" className="mt-1.5 text-xs font-semibold text-warn-600">{note}</p>}
       </div>
     </article>
   )
@@ -64,9 +60,9 @@ export function ProductCard({ view, store }: { view: ProductView; store: Store }
 
 export function ProductCardSkeleton() {
   return (
-    <div className="overflow-hidden rounded-card border border-line bg-surface">
-      <div className="skeleton aspect-[5/4] w-full" />
-      <div className="space-y-2 p-3"><div className="skeleton h-4 w-3/4 rounded" /><div className="skeleton h-3 w-1/3 rounded" /><div className="skeleton h-8 w-full rounded-xl" /></div>
+    <div className="rounded-card border border-line bg-surface p-2.5">
+      <div className="skeleton aspect-square w-full rounded-[var(--radius-tile)]" />
+      <div className="space-y-2 p-1 pt-3"><div className="skeleton h-4 w-3/4 rounded" /><div className="skeleton h-3 w-1/3 rounded" /><div className="skeleton h-10 w-full rounded-xl" /></div>
     </div>
   )
 }

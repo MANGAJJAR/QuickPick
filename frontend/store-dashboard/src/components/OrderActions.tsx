@@ -11,7 +11,7 @@ import { RejectDialog } from './RejectDialog'
  * backend action endpoints; the buttons disable while a request is in flight (no double submits).
  */
 export function OrderActions({ order, size = 'lg' }: { order: Order; size?: 'lg' | 'md' }) {
-  const { primary, secondary } = actionsFor(order.order_status)
+  const { primary, secondary } = actionsFor(order.order_status, order.order_type)
   const run = useOrderAction()
   const [rejecting, setRejecting] = useState(false)
   if (!primary) return null
@@ -25,7 +25,7 @@ export function OrderActions({ order, size = 'lg' }: { order: Order; size?: 'lg'
         {primary.action === 'verify' ? (
           <Link
             to={`/counter?order=${order.id}`}
-            className={`inline-flex flex-1 items-center justify-center rounded-xl bg-cta-600 font-bold text-white shadow-sm transition hover:bg-cta-700 active:scale-[0.98] ${size === 'lg' ? 'min-h-14 text-lg' : 'min-h-12 text-base'}`}
+            className={`inline-flex flex-1 items-center justify-center rounded-xl bg-cta-600 font-bold text-white  transition hover:brightness-90 active:scale-[0.98] ${size === 'lg' ? 'min-h-14 text-lg' : 'min-h-12 text-base'}`}
           >
             {primary.label}
           </Link>
@@ -36,7 +36,7 @@ export function OrderActions({ order, size = 'lg' }: { order: Order; size?: 'lg'
             loading={busy}
             disabled={busy}
             onClick={() => {
-              if (!busy) run.mutate({ id: order.id, action: primary.action as 'accept' | 'start' | 'ready' })
+              if (!busy) run.mutate({ id: order.id, action: primary.action as 'accept' | 'start' | 'ready' | 'dispatch' | 'deliver' })
             }}
           >
             {primary.label}

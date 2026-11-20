@@ -1,60 +1,6 @@
 @import "tailwindcss";
 
-/*
-  QuickPick palette: "Botanical & Warm Wheat" (shared with the customer app).
-  rail/brand = Deep Botanical Forest, wheat = Golden Warm Wheat, cta = Terracotta Coral,
-  canvas = Oatmeal Linen, surface = Natural Ivory, ink = Charcoal Earth.
-*/
-@theme {
-  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
-
-  --color-ink: #181f1a;
-  --color-ink-soft: #4a5249;
-  --color-ink-faint: #6b7266;
-  --color-canvas: #faf5eb;
-  --color-surface: #ffffff;
-  --color-line: #e6dcc6;
-  --color-rail: #1b4332;
-  --color-rail-soft: #153628;
-
-  --color-brand-50: #eef5f0;
-  --color-brand-100: #d9eadf;
-  --color-brand-500: #2d6a4f;
-  --color-brand-600: #1b4332;
-  --color-brand-700: #153628;
-  --color-brand-900: #0e261b;
-
-  --color-wheat-50: #fbf6e6;
-  --color-wheat-100: #f6ecc9;
-  --color-wheat-300: #e9d8a6;
-  --color-wheat-500: #cfb765;
-
-  --color-cta-50: #fbede6;
-  --color-cta-600: #b44f2a;
-  --color-cta-700: #9a4322;
-
-  /* One consistent colour per order status (always paired with an icon + label). */
-  --color-st-placed: #7a5410;
-  --color-st-placed-bg: #f6ecc9;
-  --color-st-accepted: #2f566b;
-  --color-st-accepted-bg: #dfeaf0;
-  --color-st-preparing: #9a4322;
-  --color-st-preparing-bg: #fbe3d7;
-  --color-st-ready: #1b4332;
-  --color-st-ready-bg: #cfe6d8;
-  --color-st-completed: #4a5249;
-  --color-st-completed-bg: #ece6d6;
-  --color-st-cancelled: #8f1d17;
-  --color-st-cancelled-bg: #f9dedb;
-
-  --color-warn-50: #fbf6e6;
-  --color-warn-600: #7a5410;
-  --color-danger-50: #fbeceb;
-  --color-danger-600: #b3261e;
-
-  --shadow-soft: 0 1px 2px rgb(24 31 26 / 0.05), 0 6px 18px -8px rgb(24 31 26 / 0.12);
-}
+@import "./styles/tokens.css";
 
 html, body, #root { min-height: 100%; }
 
@@ -66,17 +12,18 @@ body {
 }
 
 :focus-visible {
-  outline: 3px solid #c85a32;
+  outline: 2px solid var(--color-cta-500);
   outline-offset: 2px;
   border-radius: 0.375rem;
 }
 
 .num { font-variant-numeric: tabular-nums; }
 h1, h2, h3 { letter-spacing: -0.015em; }
-.font-display { font-family: var(--font-display); }
+/* One typeface (Plus Jakarta Sans). "Display" just means heavy and tight. */
+.font-display { font-family: var(--font-sans); font-weight: 800; letter-spacing: -0.03em; }
 
 @keyframes flash {
-  0% { box-shadow: 0 0 0 0 rgba(207, 183, 101, 0.9); background-color: #f6ecc9; }
+  0% { box-shadow: 0 0 0 0 rgba(207, 183, 101, 0.9); background-color: var(--color-wheat-100); }
   100% { box-shadow: 0 0 0 14px rgba(207, 183, 101, 0); background-color: var(--color-surface); }
 }
 @keyframes pop { 0% { transform: scale(0.97); opacity: 0.6; } 100% { transform: scale(1); opacity: 1; } }
@@ -85,7 +32,7 @@ h1, h2, h3 { letter-spacing: -0.015em; }
 .anim-flash { animation: flash 1.6s ease-out 2; }
 .anim-pop { animation: pop 0.2s ease-out; }
 .skeleton {
-  background: linear-gradient(90deg, #efe7d3 25%, #f7f1e2 37%, #efe7d3 63%);
+  background: linear-gradient(90deg, var(--color-line) 25%, color-mix(in srgb, var(--color-line) 50%, var(--color-surface)) 37%, var(--color-line) 63%);
   background-size: 400% 100%;
   animation: shimmer 1.4s ease infinite;
 }

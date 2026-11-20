@@ -3,6 +3,7 @@ import { lazy, Suspense, useEffect, useMemo, useRef, useState, type FormEvent } 
 import { Link, useSearchParams } from 'react-router-dom'
 import { useApi } from '../api/context'
 import type { Order } from '../api/types'
+import { ArrivalBadge } from '../components/ArrivalBadge'
 import { Keypad } from '../components/Keypad'
 import { CheckIcon, ExitIcon, XIcon } from '../components/icons'
 import { Button, Skeleton, Spinner } from '../components/ui'
@@ -29,7 +30,11 @@ export function CounterPage() {
   const gate = useRef(createScanGate(config.scanDebounceMs)).current
   useEffect(() => { document.title = 'Pickup counter · QuickPick Store' }, [])
 
-  const ready = useMemo(() => board.data?.READY_FOR_PICKUP ?? [], [board.data])
+  // Customers who told us they are here go to the top of the list.
+  const ready = useMemo(
+    () => [...(board.data?.READY_FOR_PICKUP ?? [])].filter((o) => o.order_type === 'PICKUP').sort((a, b) => Number(b.arrival_status === 'ARRIVED') - Number(a.arrival_status === 'ARRIVED')),
+    [board.data],
+  )
   // With exactly one order waiting there is nothing to choose, so pre-select it.
   const effectiveSelected = selected ?? (ready.length === 1 ? ready[0]!.id : null)
   const selectedOrder = ready.find((o) => o.id === effectiveSelected) ?? null
@@ -124,6 +129,7 @@ export function CounterPage() {
                     >
                       <span className="block text-lg font-extrabold num">#{shortId(o.id)}</span>
                       <span className="block text-xs opacity-80">{o.items.reduce((n, i) => n + i.quantity, 0)} items · waiting {formatDuration(o.ready_at ? secondsSince(o.ready_at, Date.now()) : null)}</span>
+                      {o.arrival_status && <span className="mt-1 block"><ArrivalBadge status={o.arrival_status} eta={o.arrival_eta_minutes} /></span>}
                     </button>
                   ))}
                 </div>
