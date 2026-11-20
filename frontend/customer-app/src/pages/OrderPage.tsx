@@ -61,7 +61,11 @@ export function OrderPage() {
         <dl className="mt-3 space-y-1 border-t border-line pt-3 text-sm">
           <div className="flex justify-between"><dt className="text-ink-soft">Items</dt><dd className="num">{formatINR(o.subtotal)}</dd></div>
           {o.order_type === 'DELIVERY'
-            ? <div className="flex justify-between"><dt className="text-ink-soft">Delivery fee</dt><dd className="num">{Number(o.delivery_fee) === 0 ? 'Free' : formatINR(o.delivery_fee)}</dd></div>
+            ? <>
+                <div className="flex justify-between"><dt className="text-ink-soft">Delivery fee</dt><dd className="num">{Number(o.delivery_fee) === 0 ? 'Free' : formatINR(o.delivery_fee)}</dd></div>
+                {Number(o.handling_fee) > 0 && <div className="flex justify-between"><dt className="text-ink-soft">Handling fee</dt><dd className="num">{formatINR(o.handling_fee)}</dd></div>}
+                {Number(o.night_fee) > 0 && <div className="flex justify-between"><dt className="text-ink-soft">Late night fee</dt><dd className="num">{formatINR(o.night_fee)}</dd></div>}
+              </>
             : <div className="flex justify-between"><dt className="text-ink-soft">Pickup discount</dt><dd className="num text-success">−{formatINR(o.pickup_discount)}</dd></div>}
           <div className="flex justify-between text-base font-bold"><dt>Total</dt><dd className="num">{formatINR(o.total_amount)}</dd></div>
         </dl>

@@ -78,25 +78,37 @@ function walkInfo(store: Store, location?: Coords | null): { distance_m: number 
   return { distance_m: m, walk_minutes: Math.max(1, Math.ceil((m / 1000 / 5) * 60)), walkable: m <= WALK_RADIUS_M }
 }
 
+/** Same charges as the backend: delivery 35, handling 9, and a late-night fee of 30 between 23:00 and 06:00 (local). */
+const DELIVERY_FEE = 3500
+const HANDLING_FEE = 900
+const NIGHT_FEE = 3000
+const isNight = () => { const h = new Date().getHours(); return h >= 23 || h < 6 }
+
 function price(items: OrderItem[], walkable = false): Pricing {
   const subtotal = items.reduce((a, i) => a + toPaise(i.line_total), 0)
   // Same rule as the backend: walkers get round(35 x multiplier x 0.70) capped at 40; everyone else round(35 x 0.70) capped at 25.
   const cost = walkable ? 3500 * MOCK_MULTIPLIER : 3500
   const discount = Math.min(Math.round((cost * 0.7) / 100) * 100, walkable ? 4000 : 2500, subtotal)
+  const night = isNight() ? NIGHT_FEE : 0
   return {
-    subtotal: rupees(subtotal), delivery_fee: '0.00', pickup_discount: rupees(discount), pickup_fee: '4.00',
-    total_amount: rupees(subtotal - discount), you_save: rupees(discount), rider_cost_saved: rupees(Math.round(cost)),
+    subtotal: rupees(subtotal), delivery_fee: '0.00', handling_fee: '0.00', night_fee: '0.00',
+    pickup_discount: rupees(discount), pickup_fee: '4.00',
+    total_amount: rupees(subtotal - discount),
+    // Pickup spares the delivery charges: they are struck through on the bill and counted as savings.
+    waived_delivery_fee: rupees(DELIVERY_FEE), waived_handling_fee: rupees(HANDLING_FEE), waived_night_fee: rupees(night),
+    you_save: rupees(discount + DELIVERY_FEE + HANDLING_FEE + night), rider_cost_saved: rupees(Math.round(cost)),
     platform_net_saving: rupees(Math.round(cost) - discount - 400),
   }
 }
 
 function deliveryPrice(items: OrderItem[]): Pricing {
   const subtotal = items.reduce((a, i) => a + toPaise(i.line_total), 0)
-  const fee = subtotal >= 19900 ? 0 : 2500
+  const night = isNight() ? NIGHT_FEE : 0
   return {
-    subtotal: rupees(subtotal), delivery_fee: rupees(fee), pickup_discount: '0.00', pickup_fee: '0.00',
-    total_amount: rupees(subtotal + fee), you_save: '0.00', rider_cost_saved: rupees(Math.round(3500 * MOCK_MULTIPLIER)),
-    platform_net_saving: '0.00',
+    subtotal: rupees(subtotal), delivery_fee: rupees(DELIVERY_FEE), handling_fee: rupees(HANDLING_FEE), night_fee: rupees(night),
+    pickup_discount: '0.00', pickup_fee: '0.00',
+    total_amount: rupees(subtotal + DELIVERY_FEE + HANDLING_FEE + night), you_save: '0.00',
+    rider_cost_saved: rupees(Math.round(3500 * MOCK_MULTIPLIER)), platform_net_saving: '0.00',
   }
 }
 
@@ -253,7 +265,7 @@ export function createMockApi(): Api {
       const id = crypto.randomUUID().replace(/-/g, '').slice(0, 32)
       const now = NOW()
       const order: Order = {
-        id, customer_id: 'mock-user', store_id: storeId, items, subtotal: p.subtotal, delivery_fee: p.delivery_fee,
+        id, customer_id: 'mock-user', store_id: storeId, items, subtotal: p.subtotal, delivery_fee: p.delivery_fee, handling_fee: p.handling_fee, night_fee: p.night_fee,
         pickup_discount: p.pickup_discount, pickup_fee: p.pickup_fee, total_amount: p.total_amount, order_type: fulfilment,
         delivery_address: fulfilment === 'DELIVERY' ? opts!.address! : null, delivery_eta_minutes: fulfilment === 'DELIVERY' ? MOCK_DELIVERY_ETA : null,
         order_status: 'PLACED', pickup_code_reference: null, idempotency_key: key,

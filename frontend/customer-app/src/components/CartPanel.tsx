@@ -4,6 +4,7 @@ import { ESTIMATED_MAX_MINUTES, useReadyBy } from '../lib/eta'
 import { formatINR } from '../lib/format'
 import { useCartLines } from '../hooks/useCartLines'
 import { usePreview } from '../hooks/queries'
+import { BillSummary } from './BillSummary'
 import { ProductArt } from './ProductArt'
 import { QuantityStepper } from './QuantityStepper'
 import { ButtonLink, Skeleton } from './ui'
@@ -64,13 +65,8 @@ export function CartPanel({ onNavigate }: { onNavigate?: () => void }) {
         {preview.isError ? (
           <p role="alert" className="text-sm font-semibold text-danger-600">We can’t price your cart right now. Check your connection and try again.</p>
         ) : (
-          <dl className="space-y-1.5 text-sm">
-            <div className="flex justify-between"><dt className="text-ink-soft">Items</dt><dd className="num font-semibold">{p ? formatINR(p.subtotal) : <Skeleton className="h-4 w-14" />}</dd></div>
-            <div className="flex justify-between"><dt className="text-ink-soft">Pickup discount</dt><dd className="num font-semibold text-success">{p ? `−${formatINR(p.pickup_discount)}` : <Skeleton className="h-4 w-14" />}</dd></div>
-            <div className="flex justify-between pt-1 text-base font-extrabold"><dt>You pay</dt><dd className="num">{p ? formatINR(p.total_amount) : <Skeleton className="h-5 w-16" />}</dd></div>
-          </dl>
+          p ? <BillSummary compact pricing={p} mode="PICKUP" compareAt={preview.data?.delivery?.total_amount} /> : <Skeleton className="h-24 w-full" />
         )}
-        {preview.data && <p className="mt-2 text-xs italic text-ink-faint">{preview.data.message}</p>}
         <ButtonLink to="/checkout" className="mt-4 w-full" onClick={onNavigate} aria-disabled={!preview.data}>
           {p ? `Continue to checkout ${formatINR(p.total_amount)}` : 'Continue to checkout'}
         </ButtonLink>

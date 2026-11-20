@@ -119,3 +119,7 @@ Delivery orders only (409 for pickups; other stores' orders are 404). See ORDER_
 
 ### Store: `GET /store/signals`, `PUT /store/signals` (manager)
 `{rider_supply: NORMAL|LOW|VERY_LOW, weather: CLEAR|RAIN|STORM|null}` (null = live weather). Returns the snapshot: `rider_supply, weather, rush_hour, multiplier, surge_active, delivery_eta_minutes, reasons[], sources{}`. Rider supply is simulated; `sources` says so.
+
+
+### Bill fields (preview `pricing` / `delivery`, and the order)
+`delivery_fee`, `handling_fee`, `night_fee` are what THIS order pays (all 0 for pickup). On the PICKUP pricing, `waived_delivery_fee`, `waived_handling_fee`, `waived_night_fee` are what a delivery of the same cart would have charged, and `you_save` is the pickup discount plus those. The delivery pricing has `you_save` 0 and carries the charged fees in `total_amount`.

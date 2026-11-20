@@ -62,6 +62,8 @@ export interface Order {
   items: OrderItem[]
   subtotal: Money
   delivery_fee: Money
+  handling_fee?: Money
+  night_fee?: Money
   pickup_discount: Money
   pickup_fee: Money
   total_amount: Money

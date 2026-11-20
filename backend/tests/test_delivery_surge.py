@@ -140,13 +140,15 @@ async def test_offer_for_unknown_store_is_404(client):
 
 
 # --------------------------------------------------------------------------- preview and checkout agree
-async def test_preview_prices_both_ways_and_delivery_is_free_over_the_threshold(client):
+async def test_preview_prices_both_ways(client):
     p = await preview(client)
-    assert float(p["pricing"]["total_amount"]) == 35.0  # Rs 60 - Rs 25 pickup discount
-    assert float(p["delivery"]["delivery_fee"]) == 25.0 and float(p["delivery"]["total_amount"]) == 85.0
+    assert float(p["pricing"]["total_amount"]) == 35.0  # Rs 60 - Rs 25 pickup discount, no fees
+    d = p["delivery"]
+    assert (float(d["delivery_fee"]), float(d["handling_fee"]), float(d["night_fee"])) == (35.0, 9.0, 0.0)
+    assert float(d["total_amount"]) == 104.0  # 60 + 35 delivery + 9 handling
     assert p["delivery_eta_minutes"] == 18
-    big = await preview(client, items=[{"product_id": "milk", "quantity": 8}])  # Rs 240
-    assert float(big["delivery"]["delivery_fee"]) == 0.0  # free from Rs 199
+    big = await preview(client, items=[{"product_id": "milk", "quantity": 8}])  # Rs 240: delivery is never free by default
+    assert float(big["delivery"]["delivery_fee"]) == 35.0
 
 
 async def test_the_price_in_the_preview_is_the_price_on_the_order(client, db):
@@ -187,7 +189,8 @@ async def test_a_delivery_order_is_priced_with_the_fee_and_an_eta_and_reserves_s
     assert r.status_code == 201, r.text
     o = r.json()["data"]
     assert o["order_type"] == "DELIVERY" and o["delivery_address"]["line"].startswith("12 Green Park")
-    assert float(o["delivery_fee"]) == 25.0 and float(o["pickup_discount"]) == 0.0 and float(o["total_amount"]) == 85.0
+    assert (float(o["delivery_fee"]), float(o["handling_fee"]), float(o["night_fee"])) == (35.0, 9.0, 0.0)
+    assert float(o["pickup_discount"]) == 0.0 and float(o["total_amount"]) == 104.0
     assert o["delivery_eta_minutes"] == 18 and o["surge_multiplier"] is None
     assert stock(db) == (10, 2)
     store_inbox = (await client.get(f"{API}/store/notifications", headers=auth("staff-a"))).json()["data"]

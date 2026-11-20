@@ -18,7 +18,7 @@ from app.core.exceptions import ConflictError, NotFoundError
 from app.core.firebase import run_in_transaction
 from app.core.security import AuthUser
 from app.modules.discounts.engine import DiscountEngine
-from app.modules.discounts.pricing import Pricing, build_delivery_pricing, build_pricing
+from app.modules.discounts.pricing import Pricing, build_delivery_pricing, build_pricing, compute_fees
 from app.modules.inventory.ledger import InventoryLedger, StockLine, merge_lines
 from app.modules.notifications.push import PushDispatcher
 from app.modules.notifications.service import new_order_notification, short_id
@@ -121,6 +121,8 @@ class CustomerOrderService:
                 items=items,
                 subtotal=pricing.subtotal,
                 delivery_fee=pricing.delivery_fee,
+                handling_fee=pricing.handling_fee,
+                night_fee=pricing.night_fee,
                 pickup_discount=pricing.pickup_discount,
                 pickup_fee=pricing.pickup_fee,
                 total_amount=pricing.total_amount,
@@ -277,6 +279,7 @@ class CustomerOrderService:
             store_id=store.id, subtotal=subtotal, surge_multiplier=signals.multiplier,
             walkable=is_walkable(self._settings, distance_m),
         )
-        pickup = build_pricing(subtotal, quote)
-        delivery = build_delivery_pricing(subtotal, self._settings.delivery_fee, self._settings.free_delivery_above, quote.rider_cost_saved)
+        fees = compute_fees(self._settings, subtotal, utc_now())
+        pickup = build_pricing(subtotal, quote, waived=fees)
+        delivery = build_delivery_pricing(subtotal, fees, quote.rider_cost_saved)
         return pickup, delivery, signals, distance_m

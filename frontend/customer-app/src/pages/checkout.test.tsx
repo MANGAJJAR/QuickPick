@@ -16,22 +16,46 @@ function Page() {
 }
 
 describe('checkout preview rendering', () => {
-  it('shows the savings hero and the delivery vs pickup comparison from API values only', async () => {
+  it('shows a delivery-app style bill: fees struck through and FREE for pickup, then the total saving, from API values only', async () => {
     seedCart()
     const previewCheckout = vi.fn(async () => previewFixture)
     renderApp(<Page />, { api: makeApi({ previewCheckout }), route: '/checkout' })
 
-    expect(await screen.findByTestId('you-save')).toHaveTextContent('₹25')
-    expect(screen.getByText('You save ₹25 vs delivery')).toBeInTheDocument()
-    expect(screen.getByText('Delivery')).toBeInTheDocument()
-    expect(screen.getByText('QuickPick Pickup')).toBeInTheDocument()
-    expect(screen.getAllByText('Estimated').length).toBeGreaterThan(0) // delivery side is labelled illustrative
-    expect(screen.getByText('You pay')).toBeInTheDocument()
+    expect(await screen.findByTestId('you-save')).toHaveTextContent('₹69')
+    const bill = screen.getByRole('region', { name: 'Bill summary' })
+    expect(bill).toHaveTextContent('Item total₹60')
+    expect(bill).toHaveTextContent(/Delivery fee.*₹35.*FREE/)
+    expect(bill).toHaveTextContent(/Handling fee.*₹9.*FREE/)
+    expect(bill).not.toHaveTextContent('Late night fee') // only shown when there is a night fee to spare
+    expect(bill).toHaveTextContent('Pickup discount−₹25')
+    expect(bill).toHaveTextContent(/To pay.*₹104.*₹35/) // what delivery would cost, struck through, then what you pay
+    expect(screen.getByText('Savings on this order')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Place pickup order · ₹35/ })).toBeInTheDocument()
     // the client sends only ids + quantities, never prices
     expect(previewCheckout).toHaveBeenCalledWith('store-a', [{ product_id: 'milk', quantity: 2 }])
   })
 
+  it('shows the late-night fee as spared on pickup and charged on delivery', async () => {
+    seedCart()
+    const night = {
+      ...previewFixture,
+      pricing: { ...previewFixture.pricing, waived_night_fee: '30.00', you_save: '99.00' },
+      delivery: { ...previewFixture.delivery!, night_fee: '30.00', total_amount: '134.00' },
+    }
+    renderApp(<Page />, { api: makeApi({ previewCheckout: vi.fn(async () => night) }), route: '/checkout' })
+    expect(await screen.findByTestId('you-save')).toHaveTextContent('₹99')
+    expect(screen.getByRole('region', { name: 'Bill summary' })).toHaveTextContent(/Late night fee.*₹30.*FREE/)
+    await userEvent.setup().click(screen.getByRole('radio', { name: /Delivery/ }))
+    const bill = screen.getByRole('region', { name: 'Bill summary' })
+    expect(bill).toHaveTextContent('Delivery fee₹35')
+    expect(bill).toHaveTextContent('Handling fee₹9')
+    expect(bill).toHaveTextContent('Late night fee₹30')
+    expect(bill).toHaveTextContent('To pay₹134')
+    expect(screen.queryByText('Savings on this order')).not.toBeInTheDocument() // the saving belongs to pickup
+  })
+})
+
+describe('pricing errors', () => {
   it('shows an error with retry when pricing fails', async () => {
     seedCart()
     const previewCheckout = vi.fn().mockRejectedValueOnce(new ApiError(409, 'insufficient_stock', 'Insufficient stock for Toned Milk')).mockResolvedValue(previewFixture)

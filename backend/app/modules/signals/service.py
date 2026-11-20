@@ -100,20 +100,31 @@ def classify_weather(precipitation_mm: float, weather_code: int) -> Weather:
     return Weather.CLEAR
 
 
-def in_rush_hour(settings: Settings, now_utc: datetime) -> bool:
-    """True if local time falls inside any ``RUSH_HOURS`` window ("12:30-14:00,19:30-21:30")."""
-    local = now_utc + timedelta(minutes=settings.local_utc_offset_minutes)
+def in_window(spec: str, offset_minutes: int, now_utc: datetime) -> bool:
+    """True if the local time falls inside any window of ``spec`` ("12:30-14:00,19:30-21:30"). A window may cross midnight."""
+    local = now_utc + timedelta(minutes=offset_minutes)
     minutes = local.hour * 60 + local.minute
-    for window in (w.strip() for w in settings.rush_hours.split(",") if w.strip()):
+    for window in (w.strip() for w in spec.split(",") if w.strip()):
         try:
             start, end = window.split("-")
             sh, sm = (int(x) for x in start.split(":"))
             eh, em = (int(x) for x in end.split(":"))
         except ValueError:
             continue
-        if sh * 60 + sm <= minutes < eh * 60 + em:
+        lo, hi = sh * 60 + sm, eh * 60 + em
+        if (lo <= minutes < hi) if lo <= hi else (minutes >= lo or minutes < hi):
             return True
     return False
+
+
+def in_rush_hour(settings: Settings, now_utc: datetime) -> bool:
+    """True if local time falls inside any ``RUSH_HOURS`` window."""
+    return in_window(settings.rush_hours, settings.local_utc_offset_minutes, now_utc)
+
+
+def is_night(settings: Settings, now_utc: datetime) -> bool:
+    """True during the late-night window (``NIGHT_HOURS``), when delivery carries a night fee."""
+    return in_window(settings.night_hours, settings.local_utc_offset_minutes, now_utc)
 
 
 def compute(settings: Settings, supply: RiderSupply, weather: Weather, rush: bool) -> tuple[Decimal, list[str]]:

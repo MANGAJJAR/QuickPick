@@ -69,8 +69,8 @@ export function createMockApi(): Api {
     const history = [{ status: 'CREATED' as const, at: iso(created), actor_uid: 'cust', note: null }, { status: 'PLACED' as const, at: iso(created), actor_uid: 'cust', note: null }]
     return {
       id: rid(), customer_id: `cust-${rid().slice(0, 6)}`, store_id: store.id, items, subtotal: rupees(subtotal),
-      pickup_discount: rupees(type === 'DELIVERY' ? 0 : discount), pickup_fee: type === 'DELIVERY' ? '0.00' : '4.00', delivery_fee: type === 'DELIVERY' && subtotal < 19900 ? '25.00' : '0.00',
-      total_amount: rupees(type === 'DELIVERY' ? subtotal + (subtotal < 19900 ? 2500 : 0) : subtotal - discount), order_type: type, order_status: status,
+      pickup_discount: rupees(type === 'DELIVERY' ? 0 : discount), pickup_fee: type === 'DELIVERY' ? '0.00' : '4.00', delivery_fee: type === 'DELIVERY' ? '35.00' : '0.00', handling_fee: type === 'DELIVERY' ? '9.00' : '0.00', night_fee: '0.00',
+      total_amount: rupees(type === 'DELIVERY' ? subtotal + 3500 + 900 : subtotal - discount), order_type: type, order_status: status,
       delivery_address: type === 'DELIVERY' ? ({ line: ADDRESSES[Math.floor(Math.random() * ADDRESSES.length)]!, instructions: Math.random() > 0.5 ? 'Ring the bell' : null } as DeliveryAddress) : null,
       delivery_eta_minutes: type === 'DELIVERY' ? 24 : null,
       pickup_code_reference: null, idempotency_key: `k-${rid().slice(0, 8)}`, status_history: history, cancel_reason: null, accepted_at: null,

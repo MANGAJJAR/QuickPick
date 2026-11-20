@@ -52,8 +52,11 @@ class Settings(BaseSettings):
     low_stock_threshold: int = 5
 
     # --- delivery option -------------------------------------------------
-    delivery_fee: Decimal = Decimal("25.00")
-    free_delivery_above: Decimal = Decimal("199.00")  # subtotal at or above this ships free
+    delivery_fee: Decimal = Decimal("35.00")
+    handling_fee: Decimal = Decimal("9.00")  # charged on delivery orders; waived on pickup
+    night_fee: Decimal = Decimal("30.00")  # late-night surcharge on delivery orders; waived on pickup
+    night_hours: str = "23:00-06:00"  # local time window ("HH:MM-HH:MM", may cross midnight)
+    free_delivery_above: Decimal = Decimal("0")  # subtotal at or above this ships free; 0 = delivery is never free
     delivery_base_eta_minutes: int = 18
 
     # --- "riders are busy" dynamic walk-in discount (surge pricing in reverse) ---

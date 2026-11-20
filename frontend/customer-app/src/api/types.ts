@@ -86,6 +86,8 @@ export interface Order {
   items: OrderItem[]
   subtotal: Money
   delivery_fee: Money
+  handling_fee?: Money
+  night_fee?: Money
   pickup_discount: Money
   pickup_fee: Money
   total_amount: Money
@@ -162,7 +164,14 @@ export interface Pricing {
   pickup_discount: Money
   pickup_fee: Money
   total_amount: Money
+  /** Headline saving vs delivery: the pickup discount plus every delivery charge a pickup spares you. */
   you_save: Money
+  handling_fee?: Money
+  night_fee?: Money
+  /** What a delivery of this cart would have charged: shown struck through on a pickup bill. */
+  waived_delivery_fee?: Money
+  waived_handling_fee?: Money
+  waived_night_fee?: Money
   rider_cost_saved: Money
   platform_net_saving: Money
 }

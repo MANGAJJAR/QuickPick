@@ -145,6 +145,8 @@ class Order(DomainModel):
     items: list[OrderItem]
     subtotal: Money
     delivery_fee: Money
+    handling_fee: Money = Decimal("0.00")
+    night_fee: Money = Decimal("0.00")
     pickup_discount: Money
     pickup_fee: Money
     total_amount: Money

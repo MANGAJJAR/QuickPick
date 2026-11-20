@@ -78,7 +78,10 @@ export function OrderDrawer({ orderId, onClose }: { orderId: string; onClose(): 
               </ul>
               <dl className="mt-2 space-y-0.5 text-sm">
                 <div className="flex justify-between"><dt className="text-ink-soft">Subtotal</dt><dd className="num">{formatINR(q.data.subtotal)}</dd></div>
-                <div className="flex justify-between"><dt className="text-ink-soft">Pickup discount</dt><dd className="num">−{formatINR(q.data.pickup_discount)}</dd></div>
+                {Number(q.data.delivery_fee) > 0 && <div className="flex justify-between"><dt className="text-ink-soft">Delivery fee</dt><dd className="num">{formatINR(q.data.delivery_fee)}</dd></div>}
+                {Number(q.data.handling_fee) > 0 && <div className="flex justify-between"><dt className="text-ink-soft">Handling fee</dt><dd className="num">{formatINR(q.data.handling_fee)}</dd></div>}
+                {Number(q.data.night_fee) > 0 && <div className="flex justify-between"><dt className="text-ink-soft">Late night fee</dt><dd className="num">{formatINR(q.data.night_fee)}</dd></div>}
+                {Number(q.data.pickup_discount) > 0 && <div className="flex justify-between"><dt className="text-ink-soft">Pickup discount</dt><dd className="num">−{formatINR(q.data.pickup_discount)}</dd></div>}
                 <div className="flex justify-between text-base font-extrabold"><dt>Customer pays</dt><dd className="num">{formatINR(q.data.total_amount)}</dd></div>
               </dl>
             </section>

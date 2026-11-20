@@ -74,7 +74,8 @@ async def test_checkout_preview_calculations(client):
     p = data["pricing"]
     assert p["subtotal"] == "105.00" and p["pickup_discount"] == "25.00" and p["total_amount"] == "80.00"
     assert p["pickup_fee"] == "4.00" and p["platform_net_saving"] == "6.00"
-    assert data["message"] == "You save ₹25 vs delivery"
+    assert data["message"] == "You save ₹69 vs delivery"  # 25 discount + 35 delivery fee + 9 handling fee a pickup spares you
+    assert p["you_save"] == "69.00" and p["delivery_fee"] == "0.00" and p["handling_fee"] == "0.00"
 
 
 async def test_preview_ignores_client_prices_and_merges_duplicate_lines(client):

@@ -46,6 +46,7 @@ def settings() -> Settings:
         expiry_sweep_interval_seconds=0,  # tests run sweeps explicitly
         weather_enabled=False,  # tests must be offline and deterministic
         rush_hours="",  # no time-of-day surprises
+        night_hours="",  # no late-night fee unless a test turns it on
         job_secret=SecretStr("job-secret"),
     )
 

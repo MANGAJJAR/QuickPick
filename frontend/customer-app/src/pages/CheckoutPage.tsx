@@ -3,9 +3,10 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useApi } from '../api/context'
 import { ApiError } from '../api/client'
-import type { CheckoutPreview, OrderType } from '../api/types'
+import type { OrderType } from '../api/types'
 import { useCart } from '../cart/CartContext'
 import { AddressForm, FulfilmentChoice, useSavedAddress } from '../components/FulfilmentChoice'
+import { BillSummary } from '../components/BillSummary'
 import { WalkBanner } from '../components/WalkBanner'
 import { Button, Card, EmptyState, ErrorState, PageTitle, Skeleton, ButtonLink } from '../components/ui'
 import { useCartLines } from '../hooks/useCartLines'
@@ -13,56 +14,6 @@ import { useGeolocation } from '../hooks/useGeolocation'
 import { keys, usePreview } from '../hooks/queries'
 import { formatINR } from '../lib/format'
 import { cartSignature, clearKey, getOrCreateKey } from '../lib/idempotency'
-
-function Row({ label, value, muted, strong }: { label: string; value: string; muted?: boolean; strong?: boolean }) {
-  return (
-    <div className={`flex items-center justify-between py-1.5 ${strong ? 'text-lg font-bold' : 'text-sm'} ${muted ? 'text-ink-faint' : ''}`}>
-      <span>{label}</span>
-      <span className="num">{value}</span>
-    </div>
-  )
-}
-
-/** The savings moment: the hero of the pickup checkout. Text comes from the backend. */
-export function SavingsHero({ preview }: { preview: CheckoutPreview }) {
-  return (
-    <div className="rounded-[var(--radius-banner)] bg-brand-600 p-6 text-white" role="status">
-      <p className="inline-block rounded-full bg-wheat-300 px-3 py-1 text-xs font-extrabold uppercase tracking-wide text-brand-700">Pickup saves you</p>
-      <p className="mt-3 text-6xl font-extrabold tracking-[-0.03em] text-wheat-300 num" data-testid="you-save">{formatINR(preview.pricing.you_save)}</p>
-      <p className="mt-2 text-white/80">{preview.message}</p>
-    </div>
-  )
-}
-
-export function Comparison({ preview }: { preview: CheckoutPreview }) {
-  const p = preview.pricing
-  const d = preview.delivery
-  return (
-    <div className="grid gap-3 md:grid-cols-2" aria-label="Delivery versus pickup">
-      <Card className="p-4">
-        <h3 className="text-base font-bold">Delivery</h3>
-        <p className="mb-2 text-xs font-medium text-ink-faint">Estimated</p>
-        <Row label="Items" value={formatINR(p.subtotal)} />
-        {d
-          ? <Row label="Delivery fee" value={Number(d.delivery_fee) === 0 ? 'Free' : formatINR(d.delivery_fee)} />
-          : <Row label="Delivery fee (est.)" value={`≈ ${formatINR(p.rider_cost_saved)}`} />}
-        <Row label="Pickup discount" value="Not available" muted />
-        {d
-          ? <div className="mt-1 border-t border-line pt-1"><Row label="You pay" value={formatINR(d.total_amount)} strong /></div>
-          : <p className="mt-2 text-xs text-ink-faint">Illustrative: based on an average rider cost, not a quote.</p>}
-      </Card>
-      <Card className="border-2 border-brand-500 bg-brand-50 p-4">
-        <div className="flex items-center justify-between"><h3 className="text-base font-bold">QuickPick Pickup</h3><span className="rounded-full bg-brand-600 px-2.5 py-0.5 text-xs font-extrabold text-white">Pickup</span></div>
-        <p className="mb-2 text-xs font-medium text-ink-faint">Collect from the store</p>
-        <Row label="Items" value={formatINR(p.subtotal)} />
-        <Row label="Delivery fee" value={formatINR(p.delivery_fee)} />
-        <Row label="Pickup discount" value={`−${formatINR(p.pickup_discount)}`} />
-        <Row label="Service fee" value="Paid by the store" />
-        <div className="mt-1 border-t border-line pt-1"><Row label="You pay" value={formatINR(p.total_amount)} strong /></div>
-      </Card>
-    </div>
-  )
-}
 
 export function CheckoutPage() {
   const api = useApi()
@@ -131,20 +82,17 @@ export function CheckoutPage() {
           <WalkBanner offer={preview.data.offer} />
           <FulfilmentChoice preview={preview.data} value={fulfilment} onChange={setFulfilment} coords={geo.coords} />
 
-          {delivery ? (
-            <>
-              <AddressForm address={address} onChange={setAddress} />
-              {Number(preview.data.pricing.you_save) > 0 && (
-                <p className="rounded-2xl bg-wheat-100 px-4 py-3 text-sm font-bold text-accent" role="status">
-                  Pickup would save you {formatINR(preview.data.pricing.you_save)} on this order.
-                </p>
-              )}
-            </>
-          ) : (
-            <>
-              <SavingsHero preview={preview.data} />
-              <Comparison preview={preview.data} />
-            </>
+          {delivery && <AddressForm address={address} onChange={setAddress} />}
+
+          <BillSummary
+            pricing={delivery ? preview.data.delivery! : preview.data.pricing}
+            mode={delivery ? 'DELIVERY' : 'PICKUP'}
+            compareAt={preview.data.delivery?.total_amount}
+          />
+          {delivery && Number(preview.data.pricing.you_save) > 0 && (
+            <p className="rounded-2xl bg-wheat-100 px-4 py-3 text-sm font-bold text-accent" role="status">
+              Pickup would save you {formatINR(preview.data.pricing.you_save)} on this order.
+            </p>
           )}
 
           <Card className="p-4">
@@ -156,12 +104,6 @@ export function CheckoutPage() {
                 </li>
               ))}
             </ul>
-            {delivery && (
-              <dl className="mt-2 space-y-1 border-t border-line pt-2 text-sm">
-                <div className="flex justify-between"><dt className="text-ink-soft">Delivery fee</dt><dd className="num">{Number(preview.data.delivery!.delivery_fee) === 0 ? 'Free' : formatINR(preview.data.delivery!.delivery_fee)}</dd></div>
-                <div className="flex justify-between text-base font-bold"><dt>You pay</dt><dd className="num">{formatINR(preview.data.delivery!.total_amount)}</dd></div>
-              </dl>
-            )}
           </Card>
 
           {err && (
