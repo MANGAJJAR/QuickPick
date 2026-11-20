@@ -2,7 +2,7 @@ import { QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/re
 import { useApi } from '../api/context'
 import { ApiError } from '../api/client'
 import { config } from '../config'
-import type { Order, StoreOperatingStatus } from '../api/types'
+import type { Order, StoreOperatingStatus, RiderSupply, Weather } from '../api/types'
 import type { OrderAction } from '../lib/lifecycle'
 
 export function createQueryClient(): QueryClient {
@@ -89,6 +89,8 @@ export function useOrderAction() {
         case 'reject': return api.rejectOrder(id, reason)
         case 'start': return api.startPreparation(id)
         case 'ready': return api.markReady(id)
+        case 'dispatch': return api.dispatchOrder(id)
+        case 'deliver': return api.deliverOrder(id)
       }
     },
     onSuccess: (order) => {
@@ -151,7 +153,7 @@ export function useAnalytics() {
 
 export function useNotifications() {
   const api = useApi()
-  return useQuery({ queryKey: keys.notifications, queryFn: () => api.listNotifications(), refetchInterval: 15_000, retry: false })
+  return useQuery({ queryKey: keys.notifications, queryFn: () => api.listNotifications(), refetchInterval: 6_000, retry: false })
 }
 
 export function useMarkNotificationRead() {
@@ -160,5 +162,20 @@ export function useMarkNotificationRead() {
   return useMutation({
     mutationFn: (id: string) => api.markNotificationRead(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: keys.notifications }),
+  })
+}
+
+/** Rider supply, weather and the multiplier behind delivery ETAs and the walk-in discount. Refreshes often. */
+export function useSignals() {
+  const api = useApi()
+  return useQuery({ queryKey: ['signals'], queryFn: () => api.getSignals(), refetchInterval: 30_000, retry: false })
+}
+
+export function useSetSignals() {
+  const api = useApi()
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ riderSupply, weather }: { riderSupply: RiderSupply; weather: Weather | null }) => api.setSignals(riderSupply, weather),
+    onSuccess: (signals) => { qc.setQueryData(['signals'], signals) },
   })
 }

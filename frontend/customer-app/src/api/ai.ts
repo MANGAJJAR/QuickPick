@@ -1,3 +1,4 @@
+import { findCategory, findProduct } from './match'
 import type { ProductView } from './types'
 
 /**
@@ -11,6 +12,8 @@ import type { ProductView } from './types'
 export interface AssistantSuggestion {
   product: ProductView
   quantity: number
+  /** Set when the user's spelling was corrected or the item came from a category word, e.g. "mlk". */
+  matchedFrom?: string
 }
 
 export interface AssistantReply {
@@ -38,24 +41,30 @@ export function parseOrderText(message: string, catalogue: ProductView[]): Assis
   const suggestions: AssistantSuggestion[] = []
   const unmatched: string[] = []
   for (const raw of cleaned.split(/,|\band\b|\+|\n/i)) {
-    const part = raw.trim().toLowerCase()
+    // Drop chatty lead-ins so the quantity is at the start: "i want 2 choclate please" -> "2 choclate".
+    const part = raw.toLowerCase().replace(/\b(please|pls|plz|can i have|i want|i need|give me|get me|add|order|buy)\b/g, ' ').replace(/\s+/g, ' ').trim()
     if (!part) continue
-    const m = part.match(/^(?:(\d{1,2})|(a|an|one|two|three|four|five|six))?\s*(?:x\s*)?(.+)$/)
+    const m = part.match(/^(?:(\d{1,2})|(a|an|one|two|three|four|five|six)\b)?\s*(?:x(?=\s|\d)\s*)?(.+)$/)
     if (!m) continue
     const quantity = m[1] ? Number(m[1]) : m[2] ? (NUMBER_WORDS[m[2]] ?? 1) : 1
-    const term = (m[3] ?? '').replace(/\b(of|packs?|pcs?)\b/g, '').trim().replace(/s$/, '')
+    const term = (m[3] ?? '').trim()
     if (!term) continue
-    const hit = catalogue.find((p) => {
-      const name = p.product.name.toLowerCase()
-      return name.includes(term) || term.includes(name.split(' ').pop() ?? '')
-    })
-    if (hit) suggestions.push({ product: hit, quantity: Math.max(1, quantity) })
-    else unmatched.push(term)
+    const hit = findProduct(term, catalogue)
+    if (hit) {
+      suggestions.push({ product: hit.product, quantity: Math.max(1, quantity), matchedFrom: hit.corrected ? term : undefined })
+      continue
+    }
+    const cat = findCategory(term, catalogue)
+    if (cat) {
+      for (const view of cat.items) suggestions.push({ product: view, quantity: 1, matchedFrom: `${cat.category} (“${term}”)` })
+    } else {
+      unmatched.push(term)
+    }
   }
 
   const text = suggestions.length
-    ? `I found ${suggestions.length} item${suggestions.length > 1 ? 's' : ''}. Review and add them to your cart.`
-    : 'I could not match any items. Try something like "2 milk, bread".'
+    ? `I found ${suggestions.length} item${suggestions.length > 1 ? 's' : ''}${suggestions.some((x) => x.matchedFrom) ? ' (I fixed a few spellings for you)' : ''}. Review and add them to your cart.`
+    : 'I could not find that at this store. Check the spelling, try a simpler name like "milk" or "chips", or switch store above.'
   return { text, suggestions, pickupInMinutes, unmatched }
 }
 

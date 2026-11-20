@@ -3,7 +3,8 @@
 Usage (against the Firestore emulator or a DEV project, never production):
 
     set FIRESTORE_EMULATOR_HOST=localhost:8081
-    python -m scripts.seed_dev_data
+    python -m scripts.seed_dev_data              # full Ahmedabad demo data (17 stores)
+    python -m scripts.seed_dev_data --minimal    # the tiny 2-store set the tests use
 """
 
 from __future__ import annotations
@@ -49,9 +50,18 @@ def build_seed_documents() -> dict[str, dict[str, Any]]:
     }
 
 
-async def populate(db: Any) -> dict[str, int]:
-    """Write the seed documents (idempotent: documents are overwritten) and return counts."""
+async def populate(db: Any, *, full: bool = False) -> dict[str, int]:
+    """Write the seed documents (idempotent: documents are overwritten) and return counts.
+
+    ``full=True`` adds the Ahmedabad demo dataset (17 stores, 35 products, ~30 stocked per store). Tests use the
+    small default so their stock assumptions stay stable.
+    """
     docs = build_seed_documents()
+    if full:
+        from scripts.demo_catalogue import build_demo_documents
+
+        for collection, items in build_demo_documents().items():
+            docs[collection].update(items)
     for collection, items in docs.items():
         for doc_id, model in items.items():
             await db.collection(collection).document(doc_id).set(serialize(model))
@@ -59,7 +69,9 @@ async def populate(db: Any) -> dict[str, int]:
 
 
 async def _main() -> None:
-    counts = await populate(create_firestore_client(get_settings()))
+    import sys
+
+    counts = await populate(create_firestore_client(get_settings()), full="--minimal" not in sys.argv)
     print(f"Seeded: {counts}")
 
 

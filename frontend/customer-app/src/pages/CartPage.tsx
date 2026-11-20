@@ -1,6 +1,7 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useCart } from '../cart/CartContext'
+import { ClearCartDialog } from '../components/ClearCartDialog'
 import { QuantityStepper } from '../components/QuantityStepper'
 import { Button, Card, EmptyState, ErrorState, PageTitle, Skeleton, ButtonLink } from '../components/ui'
 import { useCartLines } from '../hooks/useCartLines'
@@ -8,9 +9,10 @@ import { usePreview } from '../hooks/queries'
 import { formatINR } from '../lib/format'
 
 export function CartPage() {
-  const { cart, setQty, remove, clear } = useCart()
+  const { cart, count, setQty, remove, clear } = useCart()
   const { storeId, lines } = useCartLines()
   const preview = usePreview(storeId, lines)
+  const [confirmClear, setConfirmClear] = useState(false)
   useEffect(() => { document.title = 'Your cart · QuickPick' }, [])
 
   if (!cart.store || cart.items.length === 0) {
@@ -26,7 +28,7 @@ export function CartPage() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <PageTitle sub={<>Pickup from <Link className="font-semibold text-brand-700 underline" to={`/store/${cart.store.id}`}>{cart.store.name}</Link></>}>Your cart</PageTitle>
+      <PageTitle sub={<>Pickup from <Link className="font-bold text-accent underline" to={`/store/${cart.store.id}`}>{cart.store.name}</Link></>}>Your cart</PageTitle>
 
       <Card className="divide-y divide-line">
         {cart.items.map((item) => (
@@ -53,15 +55,16 @@ export function CartPage() {
             {preview.data ? <span className="text-lg font-bold num">{formatINR(preview.data.pricing.subtotal)}</span> : <Skeleton className="h-6 w-20" />}
           </div>
           {preview.data && (
-            <p className="mt-2 rounded-lg bg-brand-50 px-3 py-2 text-sm font-semibold text-brand-900">{preview.data.message}. See the breakdown at checkout.</p>
+            <p className="mt-2 rounded-lg bg-wheat-100 px-3 py-2 text-sm font-bold text-accent">{preview.data.message}. See the breakdown at checkout.</p>
           )}
-          <Link to="/checkout" className="mt-4 block" aria-disabled={!preview.data}>
-            <Button className="w-full" disabled={!preview.data}>Go to checkout</Button>
-          </Link>
+          {preview.data
+            ? <ButtonLink to="/checkout" className="mt-4 w-full text-lg">Go to checkout</ButtonLink>
+            : <Button className="mt-4 w-full text-lg" disabled>Go to checkout</Button>}
         </Card>
       )}
 
-      <div className="mt-3 text-center"><Button variant="ghost" size="sm" onClick={clear}>Clear cart</Button></div>
+      <div className="mt-3 text-center"><Button variant="ghost" size="sm" onClick={() => setConfirmClear(true)}>Clear cart</Button></div>
+      {confirmClear && <ClearCartDialog itemCount={count} onConfirm={() => { clear(); setConfirmClear(false) }} onCancel={() => setConfirmClear(false)} />}
     </div>
   )
 }

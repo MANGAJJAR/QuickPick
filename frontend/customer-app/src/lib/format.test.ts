@@ -31,6 +31,7 @@ describe('mock assistant parser', () => {
     product: { id, name, description: '', category: 'x', image_url: null, price: '10.00', unit: 'u', is_active: true },
     store_id: 's', pickable_quantity: 5, in_stock: true,
   })
+  const pvc = (id: string, name: string, category: string): ProductView => ({ ...pv(id, name), product: { ...pv(id, name).product, category } })
   const catalogue = [pv('milk', 'Toned Milk'), pv('bread', 'Brown Bread')]
 
   it('parses quantities, items and the pickup window', () => {
@@ -43,5 +44,30 @@ describe('mock assistant parser', () => {
     const r = parseOrderText('3 unicorn food and milk', catalogue)
     expect(r.unmatched).toContain('unicorn food')
     expect(r.suggestions).toHaveLength(1)
+  })
+
+  it('understands spelling mistakes, plurals and Hinglish names, and says what it corrected', () => {
+    const cat = [pv('milk', 'Toned Milk'), pv('bread', 'Brown Bread'), pv('paneer', 'Fresh Paneer'), pv('banana', 'Bananas'), pv('eggs', 'Farm Eggs'), pv('choc', 'Milk Chocolate')]
+    const ids = (t: string) => parseOrderText(t, cat).suggestions.map((s) => [s.product.product.id, s.quantity])
+    expect(ids('2 mlk')).toEqual([['milk', 2]])
+    expect(ids('brwn bread, panner')).toEqual([['bread', 1], ['paneer', 1]])
+    expect(ids('bannana')).toEqual([['banana', 1]])
+    expect(ids('3 eggz')).toEqual([['eggs', 3]])
+    expect(ids('doodh and anda')).toEqual([['milk', 1], ['eggs', 1]])
+    expect(ids('i want 2 choclate please')).toEqual([['choc', 2]])
+    const r = parseOrderText('mlk', cat)
+    expect(r.suggestions[0]?.matchedFrom).toBe('mlk')
+    expect(r.text).toMatch(/fixed/)
+    expect(parseOrderText('milk', cat).suggestions[0]?.matchedFrom).toBeUndefined()
+  })
+
+  it('shows in-stock products of a category when the user types a category word', () => {
+    const cat = [pvc('chips', 'Salted Chips', 'Snacks'), pvc('bis', 'Marie Biscuits', 'Snacks'), pvc('milk', 'Toned Milk', 'Dairy')]
+    const r = parseOrderText('snaks', cat)
+    expect(r.suggestions.map((s) => s.product.product.id)).toEqual(['chips', 'bis'])
+  })
+
+  it('still reports gibberish as unmatched', () => {
+    expect(parseOrderText('xqzvw', [pv('milk', 'Toned Milk')]).unmatched).toEqual(['xqzvw'])
   })
 })

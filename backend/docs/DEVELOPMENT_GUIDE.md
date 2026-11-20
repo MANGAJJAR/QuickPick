@@ -21,7 +21,7 @@ Option A — Firestore emulator + your own Firebase dev project for auth:
 gcloud emulators firestore start --host-port=localhost:8081
 # terminal 2
 $env:FIRESTORE_EMULATOR_HOST="localhost:8081"; $env:GCP_PROJECT_ID="quickpick-dev"
-python -m scripts.seed_dev_data        # simulated stores/products/inventory
+python -m scripts.seed_dev_data        # 17 simulated Ahmedabad stores, 93 products, each store stocking about 70% of them, a different mix per store (add --minimal for the 2-store test set)
 uvicorn app.main:app --reload --port 8080
 ```
 Auth needs Firebase: either the Auth emulator (`npx firebase-tools emulators:start --only auth`, then `$env:FIREBASE_AUTH_EMULATOR_HOST="localhost:9099"`) or a dev project with `gcloud auth application-default login`. Create users in the emulator UI, then give them roles:

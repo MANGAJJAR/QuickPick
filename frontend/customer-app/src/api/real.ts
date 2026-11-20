@@ -2,7 +2,10 @@ import type { Api } from './api'
 import type { Http } from './client'
 import type {
   AppNotification,
+  ArrivalInput,
   CartLine,
+  Coords,
+  WalkOffer,
   CheckoutPreview,
   Order,
   PickupCredential,
@@ -42,16 +45,26 @@ export function createRealApi(http: Http): Api {
       return { items: r.data, pagination: r.pagination }
     },
 
-    async previewCheckout(storeId, items: CartLine[]) {
-      return (await http.request<CheckoutPreview>('POST', '/customer/checkout/preview', { body: { store_id: storeId, items } })).data
+    async previewCheckout(storeId, items: CartLine[], location?: Coords | null) {
+      return (await http.request<CheckoutPreview>('POST', '/customer/checkout/preview', { body: { store_id: storeId, items, ...(location ? { location } : {}) } })).data
     },
 
-    async createOrder(storeId, items, idempotencyKey) {
-      const r = await http.request<Order>('POST', '/customer/orders', {
-        body: { store_id: storeId, items },
+    async createOrder(storeId, items, idempotencyKey, opts) {
+      const res = await http.request<Order>('POST', '/customer/orders', {
+        body: {
+          store_id: storeId,
+          items,
+          fulfilment: opts?.fulfilment ?? 'PICKUP',
+          ...(opts?.address ? { delivery_address: opts.address } : {}),
+          ...(opts?.location ? { location: opts.location } : {}),
+        },
         headers: { 'Idempotency-Key': idempotencyKey },
       })
-      return { order: r.data, created: r.status === 201 }
+      return { order: res.data, created: res.status === 201 }
+    },
+
+    async getOffer(storeId, location) {
+      return (await get<WalkOffer>(`/customer/stores/${encodeURIComponent(storeId)}/offer`, location ? { lat: location.lat, lng: location.lng } : undefined)).data
     },
 
     async listOrders(cursor) {
@@ -71,13 +84,21 @@ export function createRealApi(http: Http): Api {
       return (await get<PickupCredential>(`/customer/orders/${encodeURIComponent(orderId)}/pickup-credential`)).data
     },
 
-    // Backend does not implement these yet (docs/CUSTOMER_MODULE.md). They 404 and the UI shows an honest empty state.
     async listNotifications() {
       return (await get<AppNotification[]>('/customer/notifications')).data
     },
 
     async markNotificationRead(id) {
       await http.request('PATCH', `/customer/notifications/${encodeURIComponent(id)}/read`)
+    },
+
+    async shareArrival(orderId: string, input: ArrivalInput | null) {
+      const path = `/customer/orders/${encodeURIComponent(orderId)}/arrival`
+      return (await http.request<Order>(input ? 'POST' : 'DELETE', path, { body: input ?? undefined })).data
+    },
+
+    async registerDevice(token: string) {
+      await http.request('POST', '/customer/devices', { body: { token } })
     },
   }
 }

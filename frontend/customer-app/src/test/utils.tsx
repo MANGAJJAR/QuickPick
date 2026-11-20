@@ -56,14 +56,22 @@ export function renderApp(ui: ReactElement, opts: { api?: Api; auth?: AuthState;
   return { ...result, rerenderApp: (next: ReactElement) => result.rerender(wrap(next)) }
 }
 
+const pickupPricing = {
+  subtotal: '60.00', delivery_fee: '0.00', handling_fee: '0.00', night_fee: '0.00', pickup_discount: '25.00', pickup_fee: '4.00', total_amount: '35.00',
+  waived_delivery_fee: '35.00', waived_handling_fee: '9.00', waived_night_fee: '0.00',
+  you_save: '69.00', rider_cost_saved: '35.00', platform_net_saving: '6.00',
+}
+
 export const previewFixture: CheckoutPreview = {
   store_id: 'store-a',
   items: [{ product_id: 'milk', name: 'Toned Milk', unit_price: '30.00', quantity: 2, line_total: '60.00' }],
-  pricing: {
-    subtotal: '60.00', delivery_fee: '0.00', pickup_discount: '25.00', pickup_fee: '4.00', total_amount: '35.00',
-    you_save: '25.00', rider_cost_saved: '35.00', platform_net_saving: '6.00',
+  pricing: pickupPricing,
+  message: 'You save ₹69 vs delivery',
+  delivery: {
+    ...pickupPricing, delivery_fee: '35.00', handling_fee: '9.00', pickup_discount: '0.00', pickup_fee: '0.00', total_amount: '104.00',
+    waived_delivery_fee: '0.00', waived_handling_fee: '0.00', you_save: '0.00',
   },
-  message: 'You save ₹25 vs delivery',
+  delivery_eta_minutes: 18,
 }
 
 export function seedCart() {

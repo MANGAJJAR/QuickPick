@@ -1,8 +1,9 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
-import { BoxIcon } from '../components/icons'
+import { Logo } from '../components/Logo'
 import { Button, Card } from '../components/ui'
+import { PasswordField } from '../components/PasswordField'
 
 function friendlyAuthError(err: unknown): string {
   const code = (err as { code?: string })?.code ?? ''
@@ -39,16 +40,16 @@ export function LoginPage() {
     }
   }
 
-  const field = 'mt-1 block min-h-12 w-full rounded-lg border-2 border-line bg-surface px-4 text-base outline-none focus:border-ink'
+  const field = 'mt-1 block min-h-12 w-full rounded-lg border-2 border-line bg-surface px-4 text-base outline-none focus:border-brand-500'
 
   return (
-    <div className="grid min-h-screen place-items-center p-6">
+    <div className="grid min-h-dvh place-items-center bg-rail p-6">
       <div className="w-full max-w-md">
-        <div className="mb-6 flex items-center gap-3">
-          <span className="grid h-12 w-12 place-items-center rounded-xl bg-rail text-brand-500"><BoxIcon size={26} /></span>
+        <div className="mb-6 flex items-center gap-3 text-white">
+          <Logo className="h-12 w-12" />
           <div>
-            <h1 className="text-2xl font-extrabold leading-tight">QuickPick Store</h1>
-            <p className="text-sm text-ink-soft">Dark store operations</p>
+            <h1 className="font-display text-3xl font-semibold leading-tight">Quick<span className="text-wheat-300">Pick</span> Store</h1>
+            <p className="text-sm text-white/70">Dark store operations</p>
           </div>
         </div>
         <Card className="p-6">
@@ -65,9 +66,7 @@ export function LoginPage() {
               <label className="block text-sm font-bold">Work email
                 <input className={field} type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="username" required />
               </label>
-              <label className="block text-sm font-bold">Password
-                <input className={field} type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" required />
-              </label>
+              <PasswordField label="Password" labelClassName="block text-sm font-bold" inputClassName={field} value={password} onChange={setPassword} autoComplete="current-password" />
               {error && <p role="alert" className="text-sm font-bold text-danger-600">{error}</p>}
               <Button type="submit" className="w-full" loading={busy} disabled={!!configError}>Sign in</Button>
               <p className="text-center text-xs text-ink-faint">Store accounts are created by your manager or a QuickPick admin.</p>

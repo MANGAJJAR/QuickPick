@@ -1,0 +1,157 @@
+/*
+  QuickPick design tokens: "Botanical & Warm Wheat" colours on the Zapp layout language.
+  Every component reads colour from these variables (no literal hex in components).
+  Light is the default; dark follows prefers-color-scheme and can be forced with
+  <html data-theme="light|dark"> (see src/lib/theme.ts).
+
+  Roles
+    canvas / surface / line      page, cards, 1px borders (no drop shadows anywhere)
+    ink / ink-soft / ink-faint   text
+    brand-*                      forest greens: 600 = the one strong surface (banner, header), 50-200 = tints
+    accent                       forest as TEXT on surface (flips light in dark mode)
+    cta-*                        terracotta, used only for actions (Add, Checkout, Place order); cta-ink = coral as text
+    wheat-*                      premium highlights; wheat-300 is a light chip in both themes (dark text on it)
+    tint-N / tintink-N           six pastel product-tile backgrounds and their flat-art colours
+    bar                          the black cart bar
+    success / warning / danger   semantic colours, separate from the brand
+*/
+@theme {
+  --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --color-canvas: #f1e8d2;
+  --color-surface: #ffffff;
+  --color-line: #ddd1b3;
+  --color-ink: #181f1a;
+  --color-ink-soft: #4a5249;
+  --color-ink-faint: #62695c;
+  --color-bar: #0e1a14;
+
+  --color-brand-50: #eef5f0;
+  --color-brand-100: #d9eadf;
+  --color-brand-200: #b6d4c2;
+  --color-brand-300: #8fbba3;
+  --color-brand-500: #2d6a4f;
+  --color-brand-600: #1b4332;
+  --color-brand-700: #153628;
+  --color-brand-900: #0e261b;
+  --color-accent: #1b4332;
+
+  --color-wheat-50: #fbf6e6;
+  --color-wheat-100: #f6ecc9;
+  --color-wheat-300: #e9d8a6;
+  --color-wheat-500: #cfb765;
+
+  --color-cta-50: #fbede6;
+  --color-cta-100: #f6d6c7;
+  --color-cta-500: #c85a32;
+  --color-cta-600: #b44f2a;
+  --color-cta-700: #9a4322;
+  --color-cta-ink: #9a4322;
+
+  --color-tint-1: #dcebe1; --color-tintink-1: #1b4332;
+  --color-tint-2: #fbe3d7; --color-tintink-2: #b44f2a;
+  --color-tint-3: #f6ecc9; --color-tintink-3: #8a6a12;
+  --color-tint-4: #dcebf3; --color-tintink-4: #2b6784;
+  --color-tint-5: #e8e1f3; --color-tintink-5: #62449e;
+  --color-tint-6: #e4ebdd; --color-tintink-6: #4c6a38;
+
+  --color-success: #12805a;
+  --color-warn-50: #fbf6e6;
+  --color-warn-600: #8a5a12;
+  --color-danger-50: #fbeceb;
+  --color-danger-600: #b3261e;
+
+  --radius-banner: 22px;
+  --radius-card: 20px;
+  --radius-tile: 14px;
+  --radius-search: 16px;
+  /* No drop shadows in this design: surfaces are separated by a 1px border. */
+  --shadow-soft: none;
+  --shadow-lift: none;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-canvas: #0f1511;
+  --color-surface: #18201b;
+  --color-line: #2a3530;
+  --color-ink: #f1f4ee;
+  --color-ink-soft: #aab4a9;
+  --color-ink-faint: #8e998d;
+  --color-bar: #060a08;
+
+  --color-brand-50: #17261e;
+  --color-brand-100: #1f3328;
+  --color-brand-200: #2c4a3a;
+  --color-brand-300: #3f6b55;
+  --color-brand-500: #5fb38a;
+  --color-brand-600: #1e5a41;
+  --color-brand-700: #153628;
+  --color-brand-900: #0b1f16;
+  --color-accent: #8fd0ae;
+
+  --color-wheat-50: #2a2514;
+  --color-wheat-100: #3a331a;
+  --color-wheat-500: #8a7536;
+
+  --color-cta-50: #3a2218;
+  --color-cta-100: #4d2e20;
+  --color-cta-ink: #ffa27f;
+
+  --color-tint-1: #1d3a2c; --color-tintink-1: #7fd1a5;
+  --color-tint-2: #3a2223; --color-tintink-2: #ff8a6b;
+  --color-tint-3: #38301a; --color-tintink-3: #f0b450;
+  --color-tint-4: #16303f; --color-tintink-4: #5cc3eb;
+  --color-tint-5: #2b2250; --color-tintink-5: #b596ff;
+  --color-tint-6: #26331f; --color-tintink-6: #a3d27e;
+
+  --color-success: #4fd1a0;
+  --color-warn-50: #3a331a;
+  --color-warn-600: #e8c16a;
+  --color-danger-50: #3a1d1b;
+  --color-danger-600: #ff8a80;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --color-canvas: #0f1511;
+    --color-surface: #18201b;
+    --color-line: #2a3530;
+    --color-ink: #f1f4ee;
+    --color-ink-soft: #aab4a9;
+    --color-ink-faint: #8e998d;
+    --color-bar: #060a08;
+
+    --color-brand-50: #17261e;
+    --color-brand-100: #1f3328;
+    --color-brand-200: #2c4a3a;
+    --color-brand-300: #3f6b55;
+    --color-brand-500: #5fb38a;
+    --color-brand-600: #1e5a41;
+    --color-brand-700: #153628;
+    --color-brand-900: #0b1f16;
+    --color-accent: #8fd0ae;
+
+    --color-wheat-50: #2a2514;
+    --color-wheat-100: #3a331a;
+    --color-wheat-500: #8a7536;
+
+    --color-cta-50: #3a2218;
+    --color-cta-100: #4d2e20;
+    --color-cta-ink: #ffa27f;
+
+    --color-tint-1: #1d3a2c; --color-tintink-1: #7fd1a5;
+    --color-tint-2: #3a2223; --color-tintink-2: #ff8a6b;
+    --color-tint-3: #38301a; --color-tintink-3: #f0b450;
+    --color-tint-4: #16303f; --color-tintink-4: #5cc3eb;
+    --color-tint-5: #2b2250; --color-tintink-5: #b596ff;
+    --color-tint-6: #26331f; --color-tintink-6: #a3d27e;
+
+    --color-success: #4fd1a0;
+    --color-warn-50: #3a331a;
+    --color-warn-600: #e8c16a;
+    --color-danger-50: #3a1d1b;
+    --color-danger-600: #ff8a80;
+  }
+}

@@ -43,6 +43,11 @@ def settings() -> Settings:
         pickup_token_secret=SecretStr("unit-test-secret"),
         pickup_token_ttl_seconds=600,
         pickup_max_verify_attempts=3,
+        expiry_sweep_interval_seconds=0,  # tests run sweeps explicitly
+        weather_enabled=False,  # tests must be offline and deterministic
+        rush_hours="",  # no time-of-day surprises
+        night_hours="",  # no late-night fee unless a test turns it on
+        job_secret=SecretStr("job-secret"),
     )
 
 

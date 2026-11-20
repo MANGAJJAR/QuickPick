@@ -9,10 +9,11 @@ pickable stock is ``available_quantity - reserved_quantity``.
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from app.shared.enums import OrderStatus, OrderType, Role, StoreOperatingStatus
+from app.shared.enums import ArrivalStatus, NotificationKind, OrderStatus, OrderType, Role, StoreOperatingStatus
 from app.shared.money import Money
 
 
@@ -68,6 +69,8 @@ class Store(DomainModel):
     operating_status: StoreOperatingStatus = StoreOperatingStatus.CLOSED
     pickup_enabled: bool = False
     preparation_capacity: int = Field(default=10, ge=1, description="Max concurrent open orders")
+    #: Whether the platform's riders deliver from this store (older documents without the field count as yes).
+    delivery_enabled: bool = True
     created_at: datetime
     updated_at: datetime
 
@@ -105,6 +108,15 @@ def inventory_doc_id(store_id: str, product_id: str) -> str:
     return f"{store_id}__{product_id}"
 
 
+class DeliveryAddress(BaseModel):
+    """Where a DELIVERY order goes. Coordinates are optional (a typed address is enough for the store)."""
+
+    line: str = Field(min_length=5, max_length=300)
+    lat: float | None = Field(default=None, ge=-90, le=90)
+    lng: float | None = Field(default=None, ge=-180, le=180)
+    instructions: str | None = Field(default=None, max_length=200)
+
+
 class OrderItem(BaseModel):
     """Line item. Name/price are an intentional snapshot so history survives catalogue edits."""
 
@@ -133,6 +145,8 @@ class Order(DomainModel):
     items: list[OrderItem]
     subtotal: Money
     delivery_fee: Money
+    handling_fee: Money = Decimal("0.00")
+    night_fee: Money = Decimal("0.00")
     pickup_discount: Money
     pickup_fee: Money
     total_amount: Money
@@ -148,8 +162,46 @@ class Order(DomainModel):
     completed_at: datetime | None = None
     cancelled_at: datetime | None = None
     expired_at: datetime | None = None
+    delivery_address: DeliveryAddress | None = None
+    #: Estimate shown at checkout for DELIVERY orders (rises when riders are scarce). Not a guarantee.
+    delivery_eta_minutes: int | None = None
+    #: Pricing context recorded for audit when the dynamic ("riders are busy") walk-in discount applied.
+    surge_multiplier: Decimal | None = None
+    walk_distance_m: int | None = None
+    dispatched_at: datetime | None = None
+    delivered_at: datetime | None = None
+    #: When the order will be auto-expired if nobody acts (PLACED: store must accept; READY: customer must collect).
+    expires_at: datetime | None = None
+    #: Customer-reported progress ("5 min away" / "I'm here"). Cleared once the order is terminal.
+    arrival_status: ArrivalStatus | None = None
+    arrival_eta_minutes: int | None = None
+    arrival_updated_at: datetime | None = None
     created_at: datetime
     updated_at: datetime
+
+
+class Notification(DomainModel):
+    """``notifications/{id}``: addressed to one customer (``user_id``) or to a whole store (``store_id``)."""
+
+    id: str
+    user_id: str | None = None
+    store_id: str | None = None
+    kind: NotificationKind
+    title: str
+    body: str
+    order_id: str | None = None
+    read: bool = False
+    created_at: datetime
+
+
+class DeviceToken(DomainModel):
+    """``device_tokens/{hash}``: a browser/phone registered for push (FCM)."""
+
+    id: str
+    token: str
+    user_id: str
+    store_id: str | None = None
+    created_at: datetime
 
 
 class PickupVerification(DomainModel):

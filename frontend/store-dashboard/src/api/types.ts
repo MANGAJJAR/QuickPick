@@ -33,7 +33,9 @@ export type OrderStatus =
   | 'PLACED'
   | 'ACCEPTED'
   | 'PREPARING'
-  | 'READY_FOR_PICKUP'
+  | 'READY_FOR_PICKUP' // for delivery orders: packed, waiting for a rider
+  | 'OUT_FOR_DELIVERY'
+  | 'DELIVERED'
   | 'COMPLETED'
   | 'CANCELLED'
   | 'EXPIRED'
@@ -60,10 +62,12 @@ export interface Order {
   items: OrderItem[]
   subtotal: Money
   delivery_fee: Money
+  handling_fee?: Money
+  night_fee?: Money
   pickup_discount: Money
   pickup_fee: Money
   total_amount: Money
-  order_type: 'PICKUP'
+  order_type: OrderType
   order_status: OrderStatus
   pickup_code_reference: string | null
   idempotency_key: string
@@ -75,9 +79,49 @@ export interface Order {
   completed_at: string | null
   cancelled_at: string | null
   expired_at: string | null
+  delivery_address?: DeliveryAddress | null
+  delivery_eta_minutes?: number | null
+  /** Set only when the "riders are busy" walk-in discount applied. */
+  surge_multiplier?: string | null
+  walk_distance_m?: number | null
+  dispatched_at?: string | null
+  delivered_at?: string | null
+  /** Auto-expiry deadline: PLACED = accept before this, READY_FOR_PICKUP = customer must collect before this. */
+  expires_at?: string | null
+  /** The customer's own "5 min away" / "I'm here" signal. */
+  arrival_status?: ArrivalStatus | null
+  arrival_eta_minutes?: number | null
+  arrival_updated_at?: string | null
   created_at: string
   updated_at: string
 }
+
+export type OrderType = 'PICKUP' | 'DELIVERY'
+
+export interface DeliveryAddress {
+  line: string
+  lat?: number | null
+  lng?: number | null
+  instructions?: string | null
+}
+
+export type RiderSupply = 'NORMAL' | 'LOW' | 'VERY_LOW'
+export type Weather = 'CLEAR' | 'RAIN' | 'STORM'
+
+/** The rider/weather picture that drives delivery ETAs and the "riders are busy, walk and save" discount. */
+export interface Signals {
+  rider_supply: RiderSupply
+  weather: Weather
+  rush_hour: boolean
+  multiplier: string
+  surge_active: boolean
+  delivery_eta_minutes: number
+  reasons: string[]
+  /** Where each input comes from: rider supply is simulated until a real rider feed exists. */
+  sources: Record<string, string>
+}
+
+export type ArrivalStatus = 'ON_THE_WAY' | 'ARRIVED'
 
 /** Inventory row. The API returns the product id only (no name/category): see docs/DARK_STORE_FRONTEND.md. */
 export interface InventoryRow {
@@ -100,6 +144,10 @@ export interface QueueEntry {
   placed_at: string
   preparation_elapsed_seconds: number | null
   ready_waiting_seconds: number | null
+  arrival_status?: ArrivalStatus | null
+  arrival_eta_minutes?: number | null
+  arrival_updated_at?: string | null
+  expires_at?: string | null
 }
 
 export interface AnalyticsOverview {
@@ -111,7 +159,6 @@ export interface AnalyticsOverview {
   estimate_note: string
 }
 
-/** NOT in the backend yet (GET /store/notifications is unimplemented). */
 export interface AppNotification {
   id: string
   title: string
@@ -123,5 +170,5 @@ export interface AppNotification {
 
 export type StoreRole = 'STORE_STAFF' | 'STORE_MANAGER'
 
-export const ACTIVE_STATUSES: readonly OrderStatus[] = ['PLACED', 'ACCEPTED', 'PREPARING', 'READY_FOR_PICKUP']
-export const TERMINAL_STATUSES: readonly OrderStatus[] = ['COMPLETED', 'CANCELLED', 'EXPIRED']
+export const ACTIVE_STATUSES: readonly OrderStatus[] = ['PLACED', 'ACCEPTED', 'PREPARING', 'READY_FOR_PICKUP', 'OUT_FOR_DELIVERY']
+export const TERMINAL_STATUSES: readonly OrderStatus[] = ['COMPLETED', 'DELIVERED', 'CANCELLED', 'EXPIRED']

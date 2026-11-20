@@ -32,7 +32,7 @@ export function BoardPage() {
         <>
           {board.isError && <p role="alert" className="mb-3 rounded-lg bg-warn-50 p-3 text-sm font-bold text-warn-600">Couldn’t refresh just now. Showing the last data we have.</p>}
           {total === 0 && <EmptyState title="No orders right now" body="New orders appear here automatically and play a sound." />}
-          <div className={`mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4 ${total === 0 ? 'hidden' : ''}`}>
+          <div className={`mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-5 ${total === 0 ? 'hidden' : ''}`}>
             {config.boardStatuses.map((status) => {
               const list = board.data?.[status] ?? []
               return (

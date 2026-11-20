@@ -23,7 +23,7 @@ export function RejectDialog({ orderNumber, pending, error, onConfirm, onCancel 
 
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-ink/50 p-4">
-      <div role="alertdialog" aria-modal="true" aria-labelledby="reject-title" className="anim-pop w-full max-w-md rounded-xl bg-surface p-5 shadow-2xl">
+      <div role="alertdialog" aria-modal="true" aria-labelledby="reject-title" className="anim-pop w-full max-w-md rounded-xl bg-surface p-5">
         <h2 id="reject-title" className="text-xl font-extrabold">Reject order #{orderNumber}?</h2>
         <p className="mt-1 text-sm text-ink-soft">The customer is told it was cancelled and the reserved stock is released.</p>
         <div className="mt-3 flex flex-wrap gap-2">

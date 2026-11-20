@@ -23,7 +23,9 @@ Terminal: `COMPLETED`, `CANCELLED`, `EXPIRED`. The table lives in `app/shared/or
 * Customer self-cancel: only `PLACED`/`ACCEPTED`. Store "reject": only `PLACED`.
 * Cancel/reject/expire from a reserved state releases stock atomically.
 * `COMPLETED` is **not** reachable through `transition`; only verified pickup completes an order.
-* **EXPIRED is defined but nothing triggers it yet** (needs a Cloud Scheduler job calling `transition(..., EXPIRED)`); see "not done" in the README.
+* **Auto-expiry** (`app/modules/orders/expiry.py`): a PLACED order the store never accepts expires after `PLACED_EXPIRY_MINUTES` (15), and a READY_FOR_PICKUP order nobody collects expires after `READY_EXPIRY_MINUTES` (30). `0` turns a rule off. Orders being prepared are never auto-expired. Each expiry runs through `transition(EXPIRED)` with `only_from`, so stock release, status history and the notifications commit atomically, and an order that moved on in the meantime is skipped. `Order.expires_at` carries the live deadline (set on PLACED and READY, cleared otherwise) so clients can show a countdown.
+  * Triggers: an in-process loop every `EXPIRY_SWEEP_INTERVAL_SECONDS` (60; `0` disables, fine for local/dev and a single instance), and `POST /api/v1/internal/jobs/expire-orders` with header `X-Job-Secret: $JOB_SECRET` for Cloud Scheduler (returns 403 `jobs_disabled` unless `JOB_SECRET` is set). Safe to run from many instances at once.
+  * Needs two composite indexes (already in `firestore.indexes.json`): `orders(order_status, created_at)` and `orders(order_status, ready_at)`.
 
 ## Pickup verification
 
@@ -46,3 +48,37 @@ total_amount         = subtotal + delivery_fee(0) - pickup_discount
 ```
 
 Assumptions: (1) `35 × 0.70 = 24.50` is rounded half-up to a whole rupee → **₹25**, then capped at 25. (2) `quickpick_fee` is QuickPick's fee billed to the dark-store platform, so it is recorded on the order (`pickup_fee`) but **not** added to the customer total; this keeps the headline "You save ₹25 vs delivery" true. (3) The discount never exceeds the subtotal. (4) Pickup orders have `delivery_fee = 0`. (5) `platform_net_saving` can be negative if the cap is raised above the saving. (6) Product price is global; prices are read outside the order transaction (catalogue changes mid-checkout are tolerated). (7) All figures are Decimal; these numbers are a hackathon model, not measured costs.
+
+
+## Delivery orders
+
+A customer chooses **PICKUP** (default) or **DELIVERY** at checkout (`fulfilment` on `POST /customer/orders`). The platform's riders do the delivering; QuickPick records the address and the hand-offs, and prices both ways from the same cart.
+
+```
+PLACED -> ACCEPTED -> PREPARING -> READY_FOR_PICKUP ("packed, waiting for a rider") -> OUT_FOR_DELIVERY -> DELIVERED
+```
+
+* Store actions: `POST /store/orders/{id}/dispatch` (packed -> OUT_FOR_DELIVERY, delivery orders only) and `POST /store/orders/{id}/deliver` (OUT_FOR_DELIVERY -> DELIVERED). `deliver` runs in one transaction with the stock confirmation (reserved -> deducted), exactly like a verified pickup, plus the customer notification.
+* Delivery orders have no pickup code, no arrival signal, and never appear in the counter queue. A packed delivery does **not** auto-expire (it waits for a rider, not the customer); an unaccepted one still expires after `PLACED_EXPIRY_MINUTES`.
+* **Bill, like a delivery app's bill counter.** A DELIVERY order pays the items + `delivery_fee` (`DELIVERY_FEE`, ₹35) + `handling_fee` (`HANDLING_FEE`, ₹9) + a `night_fee` (`NIGHT_FEE`, ₹30) when the order is placed inside `NIGHT_HOURS` (default 23:00-06:00 local, may cross midnight). `FREE_DELIVERY_ABOVE` can waive the delivery fee above an amount; 0 (default) means never. A PICKUP order pays **none** of these: they come back as `waived_delivery_fee`, `waived_handling_fee`, `waived_night_fee` so the app can show them struck through and FREE, and `you_save` = pickup discount + every spared charge (normal day: 25 + 35 + 9 = ₹69; at night 25 + 35 + 9 + 30 = ₹99; with the walk-in discount 40 + 35 + 9 = ₹84). No QuickPick fee on delivery. `delivery_eta_minutes` is an estimate stored on the order. All of it is computed on the server by one function used for both the preview and the order, so the bill shown is the bill charged.
+* The platform's economics are an assumption, not a measurement: a pickup spares the customer ₹44+ of charges the platform would have collected and also saves the rider trip it would have paid for.
+* A store can switch delivery off with `Store.delivery_enabled` (documents without the field count as enabled).
+
+## "Riders are busy": surge pricing in reverse
+
+`app/modules/signals/` turns rider scarcity into one number, `multiplier` (1.0 = normal, capped at `MAX_SURGE_MULTIPLIER` 1.8):
+
+| input | source | adds |
+|---|---|---|
+| rider supply LOW / VERY_LOW | **simulated**: the store manager sets it (`PUT /store/signals`); swap `SignalService` for the platform's real rider feed | +0.30 / +0.60 |
+| weather RAIN / STORM | **live** from Open-Meteo (free, no key, cached `WEATHER_CACHE_SECONDS`); a manager can force it; any failure means CLEAR | +0.30 / +0.50 |
+| rush hour | schedule `RUSH_HOURS` (default 12:30-14:00, 19:30-21:30 local) | +0.25 |
+
+`multiplier >= SURGE_THRESHOLD` (1.25) means riders are busy. It raises the delivery ETA (`DELIVERY_BASE_ETA_MINUTES + 30 x (multiplier - 1)`) and, **only for customers within `WALK_RADIUS_KM` (1 km) of the store**, the pickup discount:
+
+```
+normal   discount = min(round(35 x 0.70), 25, subtotal)                    = 25
+walking  discount = min(round(35 x multiplier x 0.70), 40, subtotal)       (up to 40; the platform's delivery cost rose by the same factor)
+```
+
+The same function prices the preview and the order, so the number shown is the number charged. The customer's location is client-reported: it can only unlock the higher discount (at most ₹15 more, never above the order value), and the order records `surge_multiplier` and `walk_distance_m` for audit. Everyone else keeps the normal discount. `GET /customer/stores/{id}/offer?lat=&lng=` returns the headline ("Riders are busy. Walk 3 min and save ₹40"), the reasons, the delivery ETA and where each input comes from.

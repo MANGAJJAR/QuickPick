@@ -1,43 +1,6 @@
 @import "tailwindcss";
 
-@theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-
-  --color-ink: #0f172a;
-  --color-ink-soft: #475569;
-  --color-ink-faint: #64748b;
-  --color-canvas: #eef1f4;
-  --color-surface: #ffffff;
-  --color-line: #d5dbe3;
-  --color-rail: #0f172a;
-  --color-rail-soft: #1e293b;
-
-  --color-brand-50: #ecfdf3;
-  --color-brand-100: #d1fadf;
-  --color-brand-500: #12b76a;
-  --color-brand-600: #079455;
-  --color-brand-700: #067647;
-  --color-brand-900: #054f31;
-
-  /* One consistent colour per order status (always paired with an icon + label). */
-  --color-st-placed: #92400e;
-  --color-st-placed-bg: #fef3c7;
-  --color-st-accepted: #1e40af;
-  --color-st-accepted-bg: #dbeafe;
-  --color-st-preparing: #5b21b6;
-  --color-st-preparing-bg: #ede9fe;
-  --color-st-ready: #166534;
-  --color-st-ready-bg: #dcfce7;
-  --color-st-completed: #334155;
-  --color-st-completed-bg: #e2e8f0;
-  --color-st-cancelled: #991b1b;
-  --color-st-cancelled-bg: #fee2e2;
-
-  --color-warn-50: #fffbeb;
-  --color-warn-600: #b45309;
-  --color-danger-50: #fef2f2;
-  --color-danger-600: #b91c1c;
-}
+@import "./styles/tokens.css";
 
 html, body, #root { min-height: 100%; }
 
@@ -49,16 +12,19 @@ body {
 }
 
 :focus-visible {
-  outline: 3px solid #2563eb;
+  outline: 2px solid var(--color-cta-500);
   outline-offset: 2px;
   border-radius: 0.375rem;
 }
 
 .num { font-variant-numeric: tabular-nums; }
+h1, h2, h3 { letter-spacing: -0.015em; }
+/* One typeface (Plus Jakarta Sans). "Display" just means heavy and tight. */
+.font-display { font-family: var(--font-sans); font-weight: 800; letter-spacing: -0.03em; }
 
 @keyframes flash {
-  0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.9); background-color: #fef3c7; }
-  100% { box-shadow: 0 0 0 14px rgba(245, 158, 11, 0); background-color: var(--color-surface); }
+  0% { box-shadow: 0 0 0 0 rgba(207, 183, 101, 0.9); background-color: var(--color-wheat-100); }
+  100% { box-shadow: 0 0 0 14px rgba(207, 183, 101, 0); background-color: var(--color-surface); }
 }
 @keyframes pop { 0% { transform: scale(0.97); opacity: 0.6; } 100% { transform: scale(1); opacity: 1; } }
 @keyframes shimmer { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
@@ -66,10 +32,19 @@ body {
 .anim-flash { animation: flash 1.6s ease-out 2; }
 .anim-pop { animation: pop 0.2s ease-out; }
 .skeleton {
-  background: linear-gradient(90deg, #e3e8ee 25%, #eef1f4 37%, #e3e8ee 63%);
+  background: linear-gradient(90deg, var(--color-line) 25%, color-mix(in srgb, var(--color-line) 50%, var(--color-surface)) 37%, var(--color-line) 63%);
   background-size: 400% 100%;
   animation: shimmer 1.4s ease infinite;
 }
 @media (prefers-reduced-motion: reduce) {
   .anim-flash, .anim-pop, .skeleton { animation: none; }
+}
+
+/* Typographic polish: balanced headings, no orphans in body copy. */
+h1, h2, h3 { text-wrap: balance; }
+p { text-wrap: pretty; }
+
+/* One switch for everyone who asks for less motion. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
 }

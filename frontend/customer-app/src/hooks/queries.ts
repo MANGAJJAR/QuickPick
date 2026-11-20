@@ -1,3 +1,4 @@
+import type { ArrivalInput, Coords } from '../api/types'
 import { keepPreviousData, QueryClient, useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useApi } from '../api/context'
 import { ApiError } from '../api/client'
@@ -65,11 +66,13 @@ export function useProducts(storeId: string) {
 }
 
 /** Server-priced preview. The cart screen and checkout both display ONLY what this returns. */
-export function usePreview(storeId: string | null, lines: CartLine[]) {
+export function usePreview(storeId: string | null, lines: CartLine[], location?: Coords | null) {
   const api = useApi()
+  // ~100 m buckets: the price depends on distance only coarsely, so GPS jitter must not refetch.
+  const where = location ? `${location.lat.toFixed(3)},${location.lng.toFixed(3)}` : ''
   return useQuery({
-    queryKey: keys.preview(storeId ?? '', lines),
-    queryFn: () => api.previewCheckout(storeId!, lines),
+    queryKey: [...keys.preview(storeId ?? '', lines), where],
+    queryFn: () => (location ? api.previewCheckout(storeId!, lines, location) : api.previewCheckout(storeId!, lines)),
     enabled: !!storeId && lines.length > 0,
     placeholderData: keepPreviousData,
     retry: false,
@@ -113,7 +116,7 @@ export function useNotifications() {
   return useQuery({
     queryKey: keys.notifications,
     queryFn: () => api.listNotifications(),
-    refetchInterval: 20_000,
+    refetchInterval: 10_000, // fast enough that "your order is ready" feels live
     retry: false,
   })
 }
@@ -124,5 +127,32 @@ export function useMarkNotificationRead() {
   return useMutation({
     mutationFn: (id: string) => api.markNotificationRead(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: keys.notifications }),
+  })
+}
+
+/** "5 min away" / "I'm here" (or null to withdraw). Updates the cached order straight from the response. */
+export function useShareArrival(orderId: string) {
+  const api = useApi()
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (input: ArrivalInput | null) => api.shareArrival(orderId, input),
+    onSuccess: (order) => {
+      qc.setQueryData(keys.order(orderId), order)
+      void qc.invalidateQueries({ queryKey: keys.orders })
+    },
+  })
+}
+
+/** "Riders are busy. Walk 3 min and save ₹40" for one store. Refreshes every minute so it appears and disappears with the conditions. */
+export function useStoreOffer(storeId: string | null, location: Coords | null) {
+  const api = useApi()
+  const where = location ? `${location.lat.toFixed(3)},${location.lng.toFixed(3)}` : ''
+  return useQuery({
+    queryKey: ['offer', storeId, where],
+    queryFn: () => api.getOffer(storeId!, location),
+    enabled: !!storeId,
+    refetchInterval: 60_000,
+    retry: false,
+    staleTime: 30_000,
   })
 }

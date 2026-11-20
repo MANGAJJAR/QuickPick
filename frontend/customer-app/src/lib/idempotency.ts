@@ -9,9 +9,10 @@ import type { CartLine } from '../api/types'
 
 const PREFIX = 'qp-idem:'
 
-export function cartSignature(storeId: string, lines: CartLine[]): string {
+export function cartSignature(storeId: string, lines: CartLine[], extra = ''): string {
   const sorted = [...lines].sort((a, b) => a.product_id.localeCompare(b.product_id))
-  return `${storeId}|${sorted.map((l) => `${l.product_id}x${l.quantity}`).join(',')}`
+  // `extra` carries fulfilment + address: choosing delivery after a failed pickup attempt must not reuse its key.
+  return `${storeId}|${sorted.map((l) => `${l.product_id}x${l.quantity}`).join(',')}${extra ? `|${extra}` : ''}`
 }
 
 function newKey(): string {

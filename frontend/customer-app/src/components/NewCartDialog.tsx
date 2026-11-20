@@ -21,7 +21,7 @@ export function NewCartDialog({ currentStoreName, newStoreName, onConfirm, onCan
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 p-4 sm:items-center">
-      <div role="alertdialog" aria-modal="true" aria-labelledby="newcart-title" aria-describedby="newcart-desc" className="anim-pop w-full max-w-sm rounded-card bg-surface p-5 shadow-xl">
+      <div role="alertdialog" aria-modal="true" aria-labelledby="newcart-title" aria-describedby="newcart-desc" className="anim-pop w-full max-w-sm rounded-card bg-surface p-5">
         <h2 id="newcart-title" className="text-lg font-semibold">Start a new cart?</h2>
         <p id="newcart-desc" className="mt-2 text-sm text-ink-soft">
           Your cart has items from <strong className="text-ink">{currentStoreName}</strong>. A pickup order comes from one store, so adding from{' '}

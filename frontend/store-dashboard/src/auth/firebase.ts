@@ -26,3 +26,9 @@ export function getFirebaseAuth(): Auth {
   cached = { app, auth }
   return auth
 }
+
+/** The shared Firebase app (also used by push messaging). */
+export function getFirebaseApp(): FirebaseApp {
+  getFirebaseAuth()
+  return cached!.app
+}

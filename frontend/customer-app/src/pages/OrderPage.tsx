@@ -3,6 +3,9 @@ import { Link, useParams } from 'react-router-dom'
 import { useApi } from '../api/context'
 import { ApiError } from '../api/client'
 import { CUSTOMER_CANCELLABLE } from '../api/types'
+import { ArrivalPanel } from '../components/ArrivalPanel'
+import { DeliveryPanel } from '../components/DeliveryPanel'
+import { ExpiryNotice } from '../components/ExpiryNotice'
 import { OrderStepper } from '../components/OrderStepper'
 import { PickupPanel } from '../components/PickupPanel'
 import { BackIcon } from '../components/icons'
@@ -34,18 +37,19 @@ export function OrderPage() {
       <Link to="/orders" className="inline-flex items-center gap-1 text-sm font-semibold text-ink-soft"><BackIcon width={18} height={18} />Your orders</Link>
       <PageTitle sub={<>{store.data?.name ?? 'Store'} · placed {formatDateTime(o.created_at)}</>}>Order #{shortId(o.id)}</PageTitle>
 
-      <PickupPanel orderId={o.id} status={o.order_status} />
+      <ExpiryNotice order={o} />
+      {o.order_type === 'DELIVERY' ? <DeliveryPanel order={o} /> : <><PickupPanel orderId={o.id} status={o.order_status} /><ArrivalPanel order={o} /></>}
 
       <Card className="p-5">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-bold">Status</h2>
           {order.isFetching && !order.isPending && <span className="text-xs text-ink-faint" aria-live="polite">Updating…</span>}
         </div>
-        <OrderStepper status={o.order_status} history={o.status_history} />
+        <OrderStepper status={o.order_status} history={o.status_history} type={o.order_type} />
         {o.order_status === 'CANCELLED' && o.cancel_reason && <p className="mt-3 text-sm text-ink-soft">Reason: {o.cancel_reason}</p>}
       </Card>
 
-      {store.data && o.order_status !== 'COMPLETED' && o.order_status !== 'CANCELLED' && o.order_status !== 'EXPIRED' && (
+      {store.data && o.order_type === 'PICKUP' && o.order_status !== 'COMPLETED' && o.order_status !== 'CANCELLED' && o.order_status !== 'EXPIRED' && (
         <Card className="p-4 text-sm"><p className="font-semibold">Pickup address</p><p className="text-ink-soft">{store.data.name}, {store.data.address}</p></Card>
       )}
 
@@ -56,7 +60,13 @@ export function OrderPage() {
         </ul>
         <dl className="mt-3 space-y-1 border-t border-line pt-3 text-sm">
           <div className="flex justify-between"><dt className="text-ink-soft">Items</dt><dd className="num">{formatINR(o.subtotal)}</dd></div>
-          <div className="flex justify-between"><dt className="text-ink-soft">Pickup discount</dt><dd className="num text-brand-700">−{formatINR(o.pickup_discount)}</dd></div>
+          {o.order_type === 'DELIVERY'
+            ? <>
+                <div className="flex justify-between"><dt className="text-ink-soft">Delivery fee</dt><dd className="num">{Number(o.delivery_fee) === 0 ? 'Free' : formatINR(o.delivery_fee)}</dd></div>
+                {Number(o.handling_fee) > 0 && <div className="flex justify-between"><dt className="text-ink-soft">Handling fee</dt><dd className="num">{formatINR(o.handling_fee)}</dd></div>}
+                {Number(o.night_fee) > 0 && <div className="flex justify-between"><dt className="text-ink-soft">Late night fee</dt><dd className="num">{formatINR(o.night_fee)}</dd></div>}
+              </>
+            : <div className="flex justify-between"><dt className="text-ink-soft">Pickup discount</dt><dd className="num text-success">−{formatINR(o.pickup_discount)}</dd></div>}
           <div className="flex justify-between text-base font-bold"><dt>Total</dt><dd className="num">{formatINR(o.total_amount)}</dd></div>
         </dl>
       </Card>

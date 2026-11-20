@@ -8,7 +8,7 @@ import { isStoreRole, useAuth } from './AuthContext'
 export function NotAuthorized({ reason }: { reason?: string }) {
   const { user, role, signOut } = useAuth()
   return (
-    <div className="grid min-h-screen place-items-center p-6">
+    <div className="grid min-h-dvh place-items-center p-6">
       <Card className="w-full max-w-lg p-8 text-center" role="alert">
         <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-full bg-danger-50 text-2xl font-extrabold text-danger-600" aria-hidden="true">!</div>
         <h1 className="text-2xl font-extrabold">Not authorized for a store</h1>
@@ -30,14 +30,14 @@ export function StoreGate({ children }: { children: ReactNode }) {
   const eligible = !!user && isStoreRole(role)
   const store = useStore(eligible)
 
-  if (loading) return <div role="status" aria-live="polite" className="grid min-h-screen place-items-center text-ink-soft">Loading…</div>
+  if (loading) return <div role="status" aria-live="polite" className="grid min-h-dvh place-items-center text-ink-soft">Loading…</div>
   if (!user) return <Navigate to="/login" replace state={{ from: location.pathname + location.search }} />
   if (!eligible) return <NotAuthorized />
   if (store.isPending) return <div className="mx-auto max-w-3xl space-y-3 p-8" aria-busy="true" aria-label="Loading store"><Skeleton className="h-10 w-1/2" /><Skeleton className="h-64 w-full" /></div>
   if (store.isError) {
     if (store.error instanceof ApiError && store.error.status === 403) return <NotAuthorized reason={store.error.message} />
     return (
-      <div className="grid min-h-screen place-items-center p-6">
+      <div className="grid min-h-dvh place-items-center p-6">
         <Card className="max-w-md p-6 text-center" role="alert">
           <h1 className="text-xl font-extrabold">Can’t load your store</h1>
           <p className="mt-1 text-sm text-ink-soft">{store.error instanceof Error ? store.error.message : 'Please try again.'}</p>

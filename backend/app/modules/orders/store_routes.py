@@ -80,3 +80,23 @@ async def mark_ready(
 ) -> dict:
     """PREPARING -> READY_FOR_PICKUP."""
     return ok(await service.mark_ready(user.store_id, user.uid, order_id))  # type: ignore[arg-type]
+
+
+@router.post("/{order_id}/dispatch")
+async def dispatch_order(
+    order_id: str,
+    user: AuthUser = Depends(require_store_staff),
+    service: StoreOrderService = Depends(get_store_order_service),
+) -> dict:
+    """Delivery orders: packed -> OUT_FOR_DELIVERY (a rider has the bag)."""
+    return ok(await service.dispatch(user.store_id, user.uid, order_id))  # type: ignore[arg-type]
+
+
+@router.post("/{order_id}/deliver")
+async def deliver_order(
+    order_id: str,
+    user: AuthUser = Depends(require_store_staff),
+    service: StoreOrderService = Depends(get_store_order_service),
+) -> dict:
+    """Delivery orders: OUT_FOR_DELIVERY -> DELIVERED (stock deducted)."""
+    return ok(await service.deliver(user.store_id, user.uid, order_id))  # type: ignore[arg-type]

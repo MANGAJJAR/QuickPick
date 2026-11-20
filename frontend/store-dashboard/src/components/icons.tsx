@@ -26,3 +26,6 @@ export const InfoIcon = (p: P) => <Icon d="M12 11v5M12 8h.01M12 21a9 9 0 1 0 0-1
 export const AlertIcon = (p: P) => <Icon d="M12 9v4M12 17h.01M10.3 4l-8 14a2 2 0 0 0 1.7 3h16a2 2 0 0 0 1.7-3l-8-14a2 2 0 0 0-3.4 0z" {...p} />
 export const BackspaceIcon = (p: P) => <Icon d="M9 5h11a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H9l-6-7zM13 10l4 4M17 10l-4 4" {...p} />
 export const ExitIcon = (p: P) => <Icon d="M10 4H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h5M15 8l4 4-4 4M19 12H9" {...p} />
+export const PinIcon = (p: P) => <Icon d="M12 21s7-6.2 7-11a7 7 0 0 0-14 0c0 4.8 7 11 7 11zM12 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z" {...p} />
+export const WalkIcon = (p: P) => <Icon d="M13 4.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zM9 21l2-7-3-2 1-5 4 1 2 3h3M11 14l3 3v4" {...p} />
+export const SunMoonIcon = (p: P) => <Icon d="M12 3v2M12 19v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M3 12h2M19 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z" {...p} />

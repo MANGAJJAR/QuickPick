@@ -39,3 +39,9 @@ class QueueEntry(BaseModel):
     placed_at: datetime
     preparation_elapsed_seconds: int | None = None
     ready_waiting_seconds: int | None = None
+    #: Customer's "5 min away" / "I'm here" signal, if any.
+    arrival_status: str | None = None
+    arrival_eta_minutes: int | None = None
+    arrival_updated_at: datetime | None = None
+    #: When the order auto-expires if nobody acts.
+    expires_at: datetime | None = None

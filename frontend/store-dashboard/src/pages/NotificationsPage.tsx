@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ApiError } from '../api/client'
+import { PushToggle } from '../components/PushToggle'
 import { useMarkNotificationRead, useNotifications } from '../hooks/queries'
 import { formatDateTime } from '../lib/format'
 import { Button, Card, EmptyState, ErrorState, PageHeader, Pill, Skeleton } from '../components/ui'
@@ -11,12 +12,13 @@ export function NotificationsPage() {
   const navigate = useNavigate()
   useEffect(() => { document.title = 'Alerts · QuickPick Store' }, [])
 
-  // The backend has no notifications endpoints yet (dark-store module backlog). Say so honestly.
+  // Older backends have no notification endpoints; keep an honest fallback instead of an error.
   const unavailable = list.error instanceof ApiError && (list.error.status === 404 || list.error.status === 405)
 
   return (
     <div className="mx-auto max-w-3xl">
       <PageHeader title="Alerts" />
+      <PushToggle />
       {list.isPending ? (
         <div className="space-y-3" aria-busy="true">{[0, 1, 2].map((i) => <Skeleton key={i} className="h-20 w-full" />)}</div>
       ) : unavailable ? (
@@ -29,7 +31,7 @@ export function NotificationsPage() {
         <ul className="space-y-3">
           {list.data.map((n) => (
             <li key={n.id}>
-              <Card className={`flex items-start justify-between gap-3 p-4 ${n.read ? '' : 'border-2 border-amber-400 bg-amber-50'}`}>
+              <Card className={`flex items-start justify-between gap-3 p-4 ${n.read ? '' : 'border-2 border-wheat-500 bg-wheat-50'}`}>
                 <div>
                   <p className="font-extrabold">{n.title}{!n.read && <span className="sr-only"> (unread)</span>}</p>
                   <p className="text-sm text-ink-soft">{n.body}</p>

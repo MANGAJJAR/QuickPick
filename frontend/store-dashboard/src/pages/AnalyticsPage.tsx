@@ -45,14 +45,14 @@ function Measured({ label, value, hint }: { label: string; value: ReactNode; hin
 
 function Illustrative({ data }: { data: AnalyticsOverview }) {
   return (
-    <Card className="border-2 border-dashed border-amber-500 bg-amber-50 p-4" data-testid="illustrative-card">
+    <Card className="border-2 border-dashed border-wheat-500 bg-wheat-50 p-4" data-testid="illustrative-card">
       <div className="flex items-center gap-1">
-        <span className="rounded bg-amber-200 px-2 py-0.5 text-xs font-extrabold uppercase tracking-wide text-amber-900">Estimated, based on assumptions</span>
+        <span className="rounded bg-wheat-300 px-2 py-0.5 text-xs font-extrabold uppercase tracking-wide text-st-placed">Estimated, based on assumptions</span>
         <InfoTip text="Illustrative only: completed pickups multiplied by an assumed rider cost per delivery. It is not measured and not verified savings." />
       </div>
-      <p className="mt-2 text-sm font-bold text-amber-900">Estimated delivery cost saved</p>
-      <p className="mt-1 text-4xl font-extrabold tracking-tight text-amber-900 num">≈ {formatINR(data.estimated_rider_cost_saved)}</p>
-      <p className="mt-1 text-xs text-amber-900/80">{data.estimate_note}</p>
+      <p className="mt-2 text-sm font-bold text-st-placed">Estimated delivery cost saved</p>
+      <p className="mt-1 text-4xl font-extrabold tracking-tight text-st-placed num">≈ {formatINR(data.estimated_rider_cost_saved)}</p>
+      <p className="mt-1 text-xs text-st-placed/80">{data.estimate_note}</p>
     </Card>
   )
 }
@@ -80,21 +80,21 @@ export function AnalyticsPage() {
         <ErrorState error={overview.error} onRetry={() => void overview.refetch()} />
       ) : (
         <>
-          <SectionTitle badge="Measured" tone="bg-brand-100 text-brand-900">Measured from completed orders</SectionTitle>
+          <SectionTitle badge="Measured" tone="bg-brand-100 text-accent">Measured from completed orders</SectionTitle>
           <div className="grid gap-4 md:grid-cols-3" data-testid="measured-section">
             <Measured label="Total pickups completed" value={overview.data ? overview.data.total_pickups : <Skeleton className="h-10 w-16" />} />
             <Measured label="Average preparation time" value={overview.data ? formatDuration(overview.data.avg_preparation_seconds) : <Skeleton className="h-10 w-24" />} hint="Preparing → ready" />
             <Measured label="Revenue from pickups" value={overview.data ? formatINR(overview.data.total_revenue) : <Skeleton className="h-10 w-28" />} hint="What customers paid, completed orders" />
           </div>
 
-          <SectionTitle badge="Estimated" tone="bg-amber-200 text-amber-900">Illustrative, not measured</SectionTitle>
+          <SectionTitle badge="Estimated" tone="bg-wheat-300 text-st-placed">Illustrative, not measured</SectionTitle>
           <div className="grid gap-4 md:grid-cols-3">
             {overview.data ? <Illustrative data={overview.data} /> : <Skeleton className="h-36 w-full" />}
           </div>
         </>
       )}
 
-      <SectionTitle badge="Measured" tone="bg-brand-100 text-brand-900">Orders per day</SectionTitle>
+      <SectionTitle badge="Measured" tone="bg-brand-100 text-accent">Orders per day</SectionTitle>
       <Card className="p-4">
         <p className="mb-2 text-xs text-ink-faint">Counted in your browser from the latest 100 orders (the API has no daily endpoint yet).</p>
         {recent.isError ? <ErrorState error={recent.error} onRetry={() => void recent.refetch()} /> : recent.isPending ? <Skeleton className="h-64 w-full" /> : (
@@ -114,7 +114,7 @@ export function AnalyticsPage() {
         )}
       </Card>
 
-      <SectionTitle badge="Measured" tone="bg-brand-100 text-brand-900">Preparation time per order</SectionTitle>
+      <SectionTitle badge="Measured" tone="bg-brand-100 text-accent">Preparation time per order</SectionTitle>
       <Card className="p-4">
         <p className="mb-2 text-xs text-ink-faint">Minutes from “preparing” to “ready” for the latest completed orders.</p>
         {recent.isPending ? <Skeleton className="h-56 w-full" /> : prep.length === 0 ? <p className="py-8 text-center text-sm font-semibold text-ink-faint">No completed orders yet.</p> : (

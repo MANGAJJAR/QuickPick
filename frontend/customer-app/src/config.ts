@@ -10,6 +10,9 @@ export const config = {
     authDomain: env.VITE_FIREBASE_AUTH_DOMAIN as string | undefined,
     projectId: env.VITE_FIREBASE_PROJECT_ID as string | undefined,
     appId: env.VITE_FIREBASE_APP_ID as string | undefined,
+    /** Only needed for background push (Firebase Cloud Messaging). */
+    messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID as string | undefined,
+    vapidKey: env.VITE_FIREBASE_VAPID_KEY as string | undefined,
     emulatorUrl: (env.VITE_FIREBASE_AUTH_EMULATOR_URL as string | undefined) || undefined,
   },
   /** Order polling interval while an order is open. */

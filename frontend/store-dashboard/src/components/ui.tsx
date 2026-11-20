@@ -5,11 +5,11 @@ import { InfoIcon } from './icons'
 type Variant = 'primary' | 'secondary' | 'danger' | 'ghost' | 'dark'
 
 const VARIANTS: Record<Variant, string> = {
-  primary: 'bg-brand-600 text-white hover:bg-brand-700 disabled:bg-brand-600/45',
-  secondary: 'border-2 border-line bg-surface text-ink hover:bg-canvas disabled:text-ink-faint',
+  primary: 'bg-cta-600 text-white  hover:brightness-90 active:scale-[0.98] disabled:bg-cta-600/45',
+  secondary: 'border-2 border-line bg-surface text-ink hover:border-brand-100 hover:bg-brand-50 disabled:text-ink-faint',
   danger: 'border-2 border-danger-600/40 bg-surface text-danger-600 hover:bg-danger-50 disabled:opacity-50',
   ghost: 'text-ink-soft hover:bg-canvas disabled:text-ink-faint',
-  dark: 'bg-ink text-white hover:bg-rail-soft disabled:opacity-50',
+  dark: 'bg-brand-600 text-white hover:brightness-90 disabled:opacity-50',
 }
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -28,7 +28,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       ref={ref}
       disabled={disabled || loading}
       aria-busy={loading || undefined}
-      className={`inline-flex items-center justify-center gap-2 rounded-lg font-bold transition-colors disabled:cursor-not-allowed ${sizing} ${VARIANTS[variant]} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-xl font-bold transition disabled:cursor-not-allowed ${sizing} ${VARIANTS[variant]} ${className}`}
       {...rest}
     >
       {loading && <Spinner />}
@@ -47,7 +47,7 @@ export function Spinner() {
 }
 
 export function Card({ className = '', ...rest }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={`rounded-xl border border-line bg-surface ${className}`} {...rest} />
+  return <div className={`rounded-2xl border border-line bg-surface  ${className}`} {...rest} />
 }
 
 export function Skeleton({ className = '' }: { className?: string }) {
@@ -57,7 +57,7 @@ export function Skeleton({ className = '' }: { className?: string }) {
 type Tone = 'neutral' | 'good' | 'warn' | 'bad' | 'info'
 const TONES: Record<Tone, string> = {
   neutral: 'bg-canvas text-ink-soft ring-line',
-  good: 'bg-brand-100 text-brand-900 ring-brand-500/40',
+  good: 'bg-brand-100 text-accent ring-brand-500/30',
   warn: 'bg-warn-50 text-warn-600 ring-warn-600/30',
   bad: 'bg-danger-50 text-danger-600 ring-danger-600/30',
   info: 'bg-st-accepted-bg text-st-accepted ring-st-accepted/30',
@@ -82,7 +82,7 @@ export function ErrorState({ error, onRetry, title }: { error: unknown; onRetry?
 
 export function EmptyState({ title, body, action }: { title: string; body?: string; action?: ReactNode }) {
   return (
-    <div className="flex flex-col items-center gap-1 rounded-xl border-2 border-dashed border-line px-6 py-10 text-center">
+    <div className="flex flex-col items-center gap-1 rounded-2xl border-2 border-dashed border-wheat-500/60 bg-wheat-50 px-6 py-10 text-center">
       <h2 className="text-lg font-bold text-ink-soft">{title}</h2>
       {body && <p className="max-w-md text-sm text-ink-faint">{body}</p>}
       {action && <div className="mt-3">{action}</div>}
@@ -94,7 +94,7 @@ export function PageHeader({ title, sub, actions }: { title: string; sub?: React
   return (
     <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
       <div>
-        <h1 className="text-2xl font-extrabold tracking-tight">{title}</h1>
+        <h1 className="font-display text-3xl font-semibold tracking-tight text-accent">{title}</h1>
         {sub && <p className="mt-0.5 text-sm text-ink-soft">{sub}</p>}
       </div>
       {actions && <div className="flex items-center gap-2">{actions}</div>}
@@ -110,7 +110,7 @@ export function InfoTip({ text }: { text: string }) {
       <button type="button" aria-describedby={id} aria-label="More information" className="grid h-6 w-6 place-items-center rounded-full text-ink-faint hover:text-ink">
         <InfoIcon size={16} />
       </button>
-      <span id={id} role="tooltip" className="pointer-events-none absolute left-1/2 top-full z-20 mt-1 hidden w-64 -translate-x-1/2 rounded-lg bg-ink px-3 py-2 text-xs font-medium leading-snug text-white shadow-lg group-focus-within:block group-hover:block">
+      <span id={id} role="tooltip" className="pointer-events-none absolute left-1/2 top-full z-20 mt-1 hidden w-64 -translate-x-1/2 rounded-lg bg-ink px-3 py-2 text-xs font-medium leading-snug text-white group-focus-within:block group-hover:block">
         {text}
       </span>
     </span>

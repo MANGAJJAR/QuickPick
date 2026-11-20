@@ -8,10 +8,12 @@ from __future__ import annotations
 
 from typing import Any
 
+from app.core.config import Settings
 from app.core.exceptions import NotFoundError
+from app.modules.notifications.push import PushDispatcher
 from app.modules.orders.lifecycle import OrderLifecycleService, OrderScope
 from app.modules.orders.repository import OrderRepository
-from app.shared.enums import OrderStatus
+from app.shared.enums import OrderStatus, OrderType
 from app.shared.models import Order
 from app.shared.pagination import PageParams, Pagination
 
@@ -19,9 +21,11 @@ from app.shared.pagination import PageParams, Pagination
 class StoreOrderService:
     """List/inspect orders and drive them through accept -> prepare -> ready."""
 
-    def __init__(self, db: Any) -> None:
+    def __init__(self, db: Any, *, settings: Settings | None = None, push: PushDispatcher | None = None) -> None:
         self._orders = OrderRepository(db)
-        self._lifecycle = OrderLifecycleService(db)
+        self._lifecycle = OrderLifecycleService(
+            db, ready_expiry_minutes=settings.ready_expiry_minutes if settings else None, push=push
+        )
 
     async def list_orders(
         self, store_id: str, page: PageParams, status: OrderStatus | None
@@ -54,6 +58,17 @@ class StoreOrderService:
     async def mark_ready(self, store_id: str, actor_uid: str, order_id: str) -> Order:
         """PREPARING -> READY_FOR_PICKUP."""
         return await self._move(store_id, actor_uid, order_id, OrderStatus.READY_FOR_PICKUP)
+
+    async def dispatch(self, store_id: str, actor_uid: str, order_id: str) -> Order:
+        """READY (packed) -> OUT_FOR_DELIVERY. Delivery orders only; the rider has taken the bag."""
+        return await self._lifecycle.transition(
+            order_id, OrderStatus.OUT_FOR_DELIVERY, actor_uid=actor_uid, scope=OrderScope(store_id=store_id),
+            only_from=frozenset({OrderStatus.READY_FOR_PICKUP}), only_type=OrderType.DELIVERY,
+        )
+
+    async def deliver(self, store_id: str, actor_uid: str, order_id: str) -> Order:
+        """OUT_FOR_DELIVERY -> DELIVERED (stock confirmed)."""
+        return await self._lifecycle.complete_delivery(order_id, actor_uid=actor_uid, scope=OrderScope(store_id=store_id))
 
     async def _move(
         self,

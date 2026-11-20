@@ -3,6 +3,8 @@ import { ApiError } from '../api/client'
 import { useOrder } from '../hooks/queries'
 import { useNow } from '../hooks/utility'
 import { formatDateTime, formatDuration, formatINR, secondsSince, shortId } from '../lib/format'
+import { ArrivalBadge } from './ArrivalBadge'
+import { ExpiryChip } from './ExpiryChip'
 import { XIcon } from './icons'
 import { OrderActions } from './OrderActions'
 import { StatusChip } from './StatusChip'
@@ -25,11 +27,11 @@ export function OrderDrawer({ orderId, onClose }: { orderId: string; onClose(): 
 
   return (
     <div className="fixed inset-0 z-40 flex justify-end bg-ink/40" onClick={onClose}>
-      <aside role="dialog" aria-modal="true" aria-label={`Order ${shortId(orderId)} details`} onClick={(e) => e.stopPropagation()} className="flex h-full w-full max-w-md flex-col overflow-y-auto bg-surface shadow-2xl">
+      <aside role="dialog" aria-modal="true" aria-label={`Order ${shortId(orderId)} details`} onClick={(e) => e.stopPropagation()} className="flex h-full w-full max-w-md flex-col overflow-y-auto bg-surface">
         <header className="sticky top-0 flex items-center justify-between gap-3 border-b border-line bg-surface p-4">
           <div>
             <h2 className="text-2xl font-extrabold num">#{shortId(orderId)}</h2>
-            {o && <StatusChip status={o.order_status} />}
+            {o && <StatusChip status={o.order_status} type={o.order_type} />}
           </div>
           <Button variant="ghost" size="sm" onClick={onClose} aria-label="Close order details"><XIcon /></Button>
         </header>
@@ -41,6 +43,28 @@ export function OrderDrawer({ orderId, onClose }: { orderId: string; onClose(): 
         ) : (
           <div className="space-y-5 p-4">
             <OrderActions order={q.data} size="md" />
+
+            {q.data.order_type === 'DELIVERY' && (
+              <section className="rounded-xl border border-line bg-canvas p-3 text-sm" aria-label="Delivery details">
+                <p className="font-extrabold">Delivery</p>
+                <p className="mt-1">{q.data.delivery_address?.line ?? 'No address'}</p>
+                {q.data.delivery_address?.instructions && <p className="mt-1 italic text-ink-faint">“{q.data.delivery_address.instructions}”</p>}
+                {q.data.delivery_eta_minutes != null && <p className="mt-1 text-ink-soft">Customer was told about {q.data.delivery_eta_minutes} min.</p>}
+              </section>
+            )}
+            {q.data.walk_distance_m != null && (
+              <section className="rounded-xl bg-wheat-50 p-3 text-sm" aria-label="Walk-in discount">
+                <p className="font-bold">Riders-are-busy walk-in discount applied</p>
+                <p className="text-ink-soft">Customer was {q.data.walk_distance_m} m away when ordering (x{q.data.surge_multiplier} rider pressure).</p>
+              </section>
+            )}
+
+            {(q.data.arrival_status || q.data.expires_at) && (
+              <section className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl bg-wheat-50 p-3" aria-label="Customer arrival and deadline">
+                <ArrivalBadge status={q.data.arrival_status} eta={q.data.arrival_eta_minutes} />
+                <ExpiryChip order={q.data} now={now} />
+              </section>
+            )}
 
             <section>
               <h3 className="mb-1 text-sm font-extrabold uppercase tracking-wide text-ink-faint">Items</h3>
@@ -54,7 +78,10 @@ export function OrderDrawer({ orderId, onClose }: { orderId: string; onClose(): 
               </ul>
               <dl className="mt-2 space-y-0.5 text-sm">
                 <div className="flex justify-between"><dt className="text-ink-soft">Subtotal</dt><dd className="num">{formatINR(q.data.subtotal)}</dd></div>
-                <div className="flex justify-between"><dt className="text-ink-soft">Pickup discount</dt><dd className="num">−{formatINR(q.data.pickup_discount)}</dd></div>
+                {Number(q.data.delivery_fee) > 0 && <div className="flex justify-between"><dt className="text-ink-soft">Delivery fee</dt><dd className="num">{formatINR(q.data.delivery_fee)}</dd></div>}
+                {Number(q.data.handling_fee) > 0 && <div className="flex justify-between"><dt className="text-ink-soft">Handling fee</dt><dd className="num">{formatINR(q.data.handling_fee)}</dd></div>}
+                {Number(q.data.night_fee) > 0 && <div className="flex justify-between"><dt className="text-ink-soft">Late night fee</dt><dd className="num">{formatINR(q.data.night_fee)}</dd></div>}
+                {Number(q.data.pickup_discount) > 0 && <div className="flex justify-between"><dt className="text-ink-soft">Pickup discount</dt><dd className="num">−{formatINR(q.data.pickup_discount)}</dd></div>}
                 <div className="flex justify-between text-base font-extrabold"><dt>Customer pays</dt><dd className="num">{formatINR(q.data.total_amount)}</dd></div>
               </dl>
             </section>

@@ -57,7 +57,9 @@ export type OrderStatus =
   | 'PLACED'
   | 'ACCEPTED'
   | 'PREPARING'
-  | 'READY_FOR_PICKUP'
+  | 'READY_FOR_PICKUP' // for delivery orders: packed, waiting for a rider
+  | 'OUT_FOR_DELIVERY'
+  | 'DELIVERED'
   | 'COMPLETED'
   | 'CANCELLED'
   | 'EXPIRED'
@@ -84,10 +86,12 @@ export interface Order {
   items: OrderItem[]
   subtotal: Money
   delivery_fee: Money
+  handling_fee?: Money
+  night_fee?: Money
   pickup_discount: Money
   pickup_fee: Money
   total_amount: Money
-  order_type: 'PICKUP'
+  order_type: OrderType
   order_status: OrderStatus
   pickup_code_reference: string | null
   idempotency_key: string
@@ -99,8 +103,59 @@ export interface Order {
   completed_at: string | null
   cancelled_at: string | null
   expired_at: string | null
+  delivery_address?: DeliveryAddress | null
+  /** Estimate shown at checkout for delivery orders. Not a promise. */
+  delivery_eta_minutes?: number | null
+  /** Set only when the "riders are busy" walk-in discount applied. */
+  surge_multiplier?: string | null
+  walk_distance_m?: number | null
+  dispatched_at?: string | null
+  delivered_at?: string | null
+  /** Auto-expiry deadline: PLACED = store must accept by then, READY_FOR_PICKUP = customer must collect by then. */
+  expires_at?: string | null
+  /** The customer's own "5 min away" / "I'm here" signal. */
+  arrival_status?: ArrivalStatus | null
+  arrival_eta_minutes?: number | null
+  arrival_updated_at?: string | null
   created_at: string
   updated_at: string
+}
+
+export type OrderType = 'PICKUP' | 'DELIVERY'
+
+export interface DeliveryAddress {
+  line: string
+  lat?: number | null
+  lng?: number | null
+  instructions?: string | null
+}
+
+export interface Coords {
+  lat: number
+  lng: number
+}
+
+/** "Riders are busy. Walk 3 min and save ₹40": what the server says about walking to the store right now. */
+export interface WalkOffer {
+  surge_active: boolean
+  /** Surge is on AND the customer is within walking distance. */
+  eligible: boolean
+  walk_minutes: number | null
+  distance_m: number | null
+  pickup_discount: Money
+  headline: string | null
+  reasons: string[]
+  delivery_eta_minutes: number
+  /** Where each signal comes from (e.g. rider supply is simulated). */
+  sources: Record<string, string>
+}
+
+export type ArrivalStatus = 'ON_THE_WAY' | 'ARRIVED'
+
+export interface ArrivalInput {
+  status: ArrivalStatus
+  /** Required for ON_THE_WAY (1 to 120). */
+  eta_minutes?: number
 }
 
 export interface Pricing {
@@ -109,7 +164,14 @@ export interface Pricing {
   pickup_discount: Money
   pickup_fee: Money
   total_amount: Money
+  /** Headline saving vs delivery: the pickup discount plus every delivery charge a pickup spares you. */
   you_save: Money
+  handling_fee?: Money
+  night_fee?: Money
+  /** What a delivery of this cart would have charged: shown struck through on a pickup bill. */
+  waived_delivery_fee?: Money
+  waived_handling_fee?: Money
+  waived_night_fee?: Money
   rider_cost_saved: Money
   platform_net_saving: Money
 }
@@ -117,8 +179,13 @@ export interface Pricing {
 export interface CheckoutPreview {
   store_id: string
   items: OrderItem[]
+  /** PICKUP pricing for this customer right now (includes the walk-in discount when it applies). */
   pricing: Pricing
   message: string
+  /** The same cart delivered. */
+  delivery?: Pricing
+  delivery_eta_minutes?: number
+  offer?: WalkOffer
 }
 
 export interface PickupCredential {
@@ -138,7 +205,6 @@ export interface UserProfile {
   updated_at: string
 }
 
-/** NOT in the backend yet (GET /customer/notifications is unimplemented). */
 export interface AppNotification {
   id: string
   title: string
@@ -158,7 +224,7 @@ export interface Page<T> {
   pagination: Pagination | null
 }
 
-export const TERMINAL_STATUSES: readonly OrderStatus[] = ['COMPLETED', 'CANCELLED', 'EXPIRED']
+export const TERMINAL_STATUSES: readonly OrderStatus[] = ['COMPLETED', 'DELIVERED', 'CANCELLED', 'EXPIRED']
 
 /** Mirrors the lifecycle: the customer may cancel only before preparation starts. */
 export const CUSTOMER_CANCELLABLE: readonly OrderStatus[] = ['PLACED', 'ACCEPTED']
