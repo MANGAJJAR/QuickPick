@@ -12,6 +12,13 @@ server {
         try_files $uri =404;
     }
 
+    # Product photos (public/products). A missing photo is a real 404 (the app then shows flat art),
+    # not the SPA's index.html. Filenames are not hashed, so cache for a month rather than forever.
+    location /products/ {
+        add_header Cache-Control "public, max-age=2592000";
+        try_files $uri =404;
+    }
+
     # SPA fallback; never cache index.html so deploys take effect immediately.
     location / {
         add_header Cache-Control "no-cache";

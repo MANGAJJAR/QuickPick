@@ -71,7 +71,7 @@ export function ProductArt({ name, category, id, className = '', dim = false }: 
     return (
       <div className={`grid place-items-center overflow-hidden rounded-[var(--radius-tile)] bg-white ${dim ? 'opacity-50' : ''} ${className}`} aria-hidden="true">
         <img
-          src={`/products/${encodeURIComponent(id)}.webp`}
+          src={`${import.meta.env.BASE_URL}products/${encodeURIComponent(id)}.webp`}
           alt=""
           width={480}
           height={480}
