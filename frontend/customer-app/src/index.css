@@ -1,30 +1,53 @@
 @import "tailwindcss";
 @import "leaflet/dist/leaflet.css";
 
+/*
+  QuickPick palette: "Botanical & Warm Wheat".
+  brand  = Deep Botanical Forest (#1B4332) / Fresh Foliage Olive (#2D6A4F): header, banners, structure
+  wheat  = Golden Warm Wheat (#E9D8A6): premium tags, highlights
+  cta    = Terracotta Coral: every interactive "do it" action (Add, Checkout, Place order)
+  canvas = Oatmeal Linen (#FAF5EB), surface = Natural Ivory (#FFFFFF), ink = Charcoal Earth (#181F1A)
+*/
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
 
-  --color-brand-50: #f0fdf4;
-  --color-brand-100: #dcfce7;
-  --color-brand-200: #bbf7d0;
-  --color-brand-500: #22a652;
-  --color-brand-600: #16803c;
-  --color-brand-700: #15692f;
-  --color-brand-900: #0f3d1e;
+  --color-brand-50: #eef5f0;
+  --color-brand-100: #d9eadf;
+  --color-brand-200: #b6d4c2;
+  --color-brand-300: #8fbba3;
+  --color-brand-500: #2d6a4f;
+  --color-brand-600: #1b4332;
+  --color-brand-700: #153628;
+  --color-brand-900: #0e261b;
 
-  --color-ink: #14201a;
-  --color-ink-soft: #4b5a51;
-  --color-ink-faint: #76847b;
+  --color-wheat-50: #fbf6e6;
+  --color-wheat-100: #f6ecc9;
+  --color-wheat-300: #e9d8a6;
+  --color-wheat-500: #cfb765;
+
+  /* Terracotta coral, one step deeper than the swatch so white text clears WCAG AA. */
+  --color-cta-50: #fbede6;
+  --color-cta-100: #f6d6c7;
+  --color-cta-500: #c85a32;
+  --color-cta-600: #b44f2a;
+  --color-cta-700: #9a4322;
+
+  --color-ink: #181f1a;
+  --color-ink-soft: #4a5249;
+  --color-ink-faint: #6f7568;
   --color-surface: #ffffff;
-  --color-canvas: #f6f7f5;
-  --color-line: #e3e7e2;
+  --color-canvas: #faf5eb;
+  --color-line: #ebe3d0;
 
-  --color-warn-50: #fffbeb;
-  --color-warn-600: #b45309;
-  --color-danger-50: #fef2f2;
-  --color-danger-600: #b91c1c;
+  --color-warn-50: #fbf6e6;
+  --color-warn-600: #8a5a12;
+  --color-danger-50: #fbeceb;
+  --color-danger-600: #b3261e;
 
-  --radius-card: 1rem;
+  --radius-card: 1.125rem;
+  --shadow-soft: 0 1px 2px rgb(24 31 26 / 0.05), 0 6px 18px -8px rgb(24 31 26 / 0.12);
+  --shadow-lift: 0 2px 4px rgb(24 31 26 / 0.06), 0 14px 30px -12px rgb(27 67 50 / 0.28);
 }
 
 html,
@@ -40,9 +63,12 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+h1, h2, h3 { letter-spacing: -0.015em; }
+.font-display { font-family: var(--font-display); }
+
 /* Visible keyboard focus everywhere. */
 :focus-visible {
-  outline: 3px solid var(--color-brand-500);
+  outline: 3px solid var(--color-cta-500);
   outline-offset: 2px;
   border-radius: 0.5rem;
 }
@@ -51,23 +77,40 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* Soft paper-grain dots used on the forest banners. */
+.banner-texture {
+  background-image:
+    radial-gradient(circle at 12% 18%, rgb(233 216 166 / 0.16) 0 2px, transparent 3px),
+    radial-gradient(circle at 78% 70%, rgb(233 216 166 / 0.12) 0 2px, transparent 3px),
+    radial-gradient(circle at 92% 12%, rgb(255 255 255 / 0.1) 0 1.5px, transparent 2.5px);
+  background-size: 46px 46px, 62px 62px, 38px 38px;
+}
+
+.hide-scrollbar { scrollbar-width: none; }
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+
 /* Motion is reserved for order status and cart; honour reduced-motion. */
 @keyframes pop {
-  0% { transform: scale(0.96); opacity: 0.6; }
+  0% { transform: scale(0.94); opacity: 0.6; }
   100% { transform: scale(1); opacity: 1; }
 }
 @keyframes pulse-ring {
-  0% { box-shadow: 0 0 0 0 rgba(34, 166, 82, 0.45); }
-  100% { box-shadow: 0 0 0 10px rgba(34, 166, 82, 0); }
+  0% { box-shadow: 0 0 0 0 rgba(200, 90, 50, 0.45); }
+  100% { box-shadow: 0 0 0 10px rgba(200, 90, 50, 0); }
 }
-.anim-pop { animation: pop 0.22s ease-out; }
+@keyframes rise {
+  0% { transform: translateY(14px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+.anim-pop { animation: pop 0.2s ease-out; }
 .anim-pulse-ring { animation: pulse-ring 1.6s ease-out infinite; }
+.anim-rise { animation: rise 0.28s cubic-bezier(0.2, 0.8, 0.2, 1); }
 @media (prefers-reduced-motion: reduce) {
-  .anim-pop, .anim-pulse-ring { animation: none; }
+  .anim-pop, .anim-pulse-ring, .anim-rise { animation: none; }
 }
 
 .skeleton {
-  background: linear-gradient(90deg, #eceee9 25%, #f4f6f2 37%, #eceee9 63%);
+  background: linear-gradient(90deg, #efe7d3 25%, #f7f1e2 37%, #efe7d3 63%);
   background-size: 400% 100%;
   animation: shimmer 1.4s ease infinite;
 }

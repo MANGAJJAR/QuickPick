@@ -25,7 +25,7 @@ export function OrderActions({ order, size = 'lg' }: { order: Order; size?: 'lg'
         {primary.action === 'verify' ? (
           <Link
             to={`/counter?order=${order.id}`}
-            className={`inline-flex flex-1 items-center justify-center rounded-lg bg-brand-600 font-bold text-white hover:bg-brand-700 ${size === 'lg' ? 'min-h-14 text-lg' : 'min-h-12 text-base'}`}
+            className={`inline-flex flex-1 items-center justify-center rounded-xl bg-cta-600 font-bold text-white shadow-sm transition hover:bg-cta-700 active:scale-[0.98] ${size === 'lg' ? 'min-h-14 text-lg' : 'min-h-12 text-base'}`}
           >
             {primary.label}
           </Link>

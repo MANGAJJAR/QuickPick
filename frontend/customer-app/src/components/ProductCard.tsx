@@ -3,15 +3,15 @@ import type { ProductView, Store } from '../api/types'
 import { useCart } from '../cart/CartContext'
 import { config } from '../config'
 import { formatINR, stockState } from '../lib/format'
+import { categoryEmoji } from '../lib/categories'
 import { QuantityStepper } from './QuantityStepper'
-import { Badge, Button, Card } from './ui'
 
-const TINTS = ['bg-brand-100 text-brand-900', 'bg-amber-100 text-amber-900', 'bg-sky-100 text-sky-900', 'bg-rose-100 text-rose-900', 'bg-violet-100 text-violet-900']
-
-function tint(category: string): string {
+// Palette-only tile tints. There are no product photos yet, so each tile gets a category emoji.
+const TINTS = ['bg-wheat-100', 'bg-brand-50', 'bg-cta-50', 'bg-wheat-50', 'bg-brand-100']
+function hash(s: string): number {
   let h = 0
-  for (const c of category) h = (h * 31 + c.charCodeAt(0)) % TINTS.length
-  return TINTS[h]!
+  for (const c of s) h = (h * 31 + c.charCodeAt(0)) % 9973
+  return h
 }
 
 export function ProductCard({ view, store }: { view: ProductView; store: Store }) {
@@ -31,35 +31,42 @@ export function ProductCard({ view, store }: { view: ProductView; store: Store }
   }
 
   return (
-    <Card className={`flex gap-3 p-3 ${stock.kind === 'out' ? 'opacity-70' : ''}`}>
-      <div className={`grid h-20 w-20 shrink-0 place-items-center rounded-xl text-xl font-extrabold ${tint(product.category)}`} aria-hidden="true">
-        {product.name.slice(0, 2).toUpperCase()}
+    <article className={`group flex h-full flex-col overflow-hidden rounded-card border border-line bg-surface shadow-soft transition hover:shadow-lift ${stock.kind === 'out' ? 'opacity-75' : ''}`}>
+      <div className={`relative grid aspect-[5/4] place-items-center ${TINTS[hash(product.category) % TINTS.length]}`} aria-hidden="true">
+        <span className={`text-5xl transition-transform group-hover:scale-110 ${stock.kind === 'out' ? 'grayscale' : ''}`}>{categoryEmoji(product.category)}</span>
+        {stock.kind === 'low' && <span className="absolute left-2 top-2 rounded-full bg-wheat-300 px-2 py-0.5 text-[11px] font-extrabold text-brand-700">{stock.label}</span>}
+        {stock.kind === 'out' && <span className="absolute left-2 top-2 rounded-full bg-ink px-2 py-0.5 text-[11px] font-extrabold text-white">{stock.label}</span>}
       </div>
-      <div className="flex min-w-0 flex-1 flex-col">
-        <h3 className="truncate text-[15px] font-semibold">{product.name}</h3>
-        <p className="text-xs text-ink-faint">{product.unit}</p>
-        <div className="mt-1"><Badge tone={stock.kind === 'in' ? 'good' : stock.kind === 'low' ? 'warn' : 'bad'}>{stock.label}</Badge></div>
-        <div className="mt-auto flex items-center justify-between pt-2">
-          <span className="text-lg font-bold num">{formatINR(product.price)}</span>
+      <div className="flex flex-1 flex-col p-3">
+        <h3 className="line-clamp-2 min-h-10 text-[15px] font-bold leading-5">{product.name}</h3>
+        <p className="mt-0.5 text-xs font-medium text-ink-faint">{product.unit}</p>
+        {stock.kind === 'in' && <span className="sr-only">{stock.label}</span>}
+        <div className="mt-auto flex items-end justify-between gap-2 pt-3">
+          <span className="text-lg font-extrabold num">{formatINR(product.price)}</span>
           {line ? (
-            <QuantityStepper quantity={line.quantity} max={line.maxQty} label={product.name} onChange={(q) => cart.setQty(product.id, q)} />
+            <QuantityStepper size="sm" quantity={line.quantity} max={line.maxQty} label={product.name} onChange={(q) => cart.setQty(product.id, q)} />
           ) : (
-            <Button size="sm" variant="ghost" className="min-w-20 border border-brand-600" onClick={add} disabled={stock.kind === 'out' || !orderable} aria-label={`Add ${product.name} to cart`}>
+            <button
+              onClick={add}
+              disabled={stock.kind === 'out' || !orderable}
+              aria-label={`Add ${product.name} to cart`}
+              className="min-h-9 min-w-[4.5rem] rounded-xl border-2 border-cta-600 bg-cta-50 px-4 text-sm font-extrabold uppercase tracking-wide text-cta-700 transition hover:bg-cta-600 hover:text-white active:scale-95 disabled:cursor-not-allowed disabled:border-line disabled:bg-canvas disabled:text-ink-faint"
+            >
               {stock.kind === 'out' ? 'Sold out' : 'Add'}
-            </Button>
+            </button>
           )}
         </div>
-        {note && <p role="status" className="mt-1 text-xs font-medium text-warn-600">{note}</p>}
+        {note && <p role="status" className="mt-1.5 text-xs font-semibold text-warn-600">{note}</p>}
       </div>
-    </Card>
+    </article>
   )
 }
 
 export function ProductCardSkeleton() {
   return (
-    <Card className="flex gap-3 p-3">
-      <div className="skeleton h-20 w-20 rounded-xl" />
-      <div className="flex-1 space-y-2"><div className="skeleton h-4 w-2/3 rounded" /><div className="skeleton h-3 w-1/3 rounded" /><div className="skeleton h-6 w-1/2 rounded" /></div>
-    </Card>
+    <div className="overflow-hidden rounded-card border border-line bg-surface">
+      <div className="skeleton aspect-[5/4] w-full" />
+      <div className="space-y-2 p-3"><div className="skeleton h-4 w-3/4 rounded" /><div className="skeleton h-3 w-1/3 rounded" /><div className="skeleton h-8 w-full rounded-xl" /></div>
+    </div>
   )
 }

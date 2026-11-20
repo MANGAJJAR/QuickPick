@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAllStores, useNearbyStores } from '../hooks/queries'
 import { useGeolocation } from '../hooks/useGeolocation'
 import { useAuth } from '../auth/AuthContext'
-import { Button, EmptyState, ErrorState, PageTitle, Skeleton } from '../components/ui'
+import { Button, EmptyState, ErrorState, Skeleton } from '../components/ui'
 import { StoreCard, StoreCardSkeleton } from '../components/StoreCard'
 
 const StoreMap = lazy(() => import('../components/StoreMap'))
@@ -30,29 +30,40 @@ export function HomePage() {
   const mapStores = useMemo(() => stores.map((s) => s.store), [stores])
   const waiting = geo.status === 'asking' || (coords && nearby.isPending)
 
+  const first = user?.name?.split(' ')[0]
   return (
     <div>
-      <PageTitle sub={user?.name ? `Hi ${user.name.split(' ')[0]}, pick up and skip the delivery fee.` : 'Pick up and skip the delivery fee.'}>
-        Stores near you
-      </PageTitle>
+      <section className="banner-texture relative mb-6 overflow-hidden rounded-[1.75rem] bg-brand-600 px-6 py-7 text-white md:px-10 md:py-10">
+        <div className="relative z-10 max-w-xl">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-wheat-300 px-3 py-1 text-xs font-extrabold uppercase tracking-wide text-brand-700">Self-pickup</span>
+          <h1 className="mt-3 font-display text-4xl font-semibold leading-[1.05] tracking-tight md:text-5xl">
+            {first ? `${first}, skip the rider.` : 'Skip the rider.'}<br /><span className="text-wheat-300">Pick it up fresh.</span>
+          </h1>
+          <p className="mt-3 max-w-md text-brand-100">Order from a dark store near you, collect it in minutes and save on delivery. Your discount is shown at checkout.</p>
+        </div>
+        <span className="pointer-events-none absolute -right-4 -top-2 select-none text-[8rem] leading-none opacity-20 md:right-8 md:text-[11rem]" aria-hidden="true">🛍️</span>
+      </section>
+
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-xl font-extrabold">Stores near you</h2>
+        <div className="inline-flex rounded-full bg-surface p-1 shadow-soft ring-1 ring-line" role="tablist" aria-label="View">
+          {(['list', 'map'] as const).map((v) => (
+            <button key={v} role="tab" aria-selected={view === v} onClick={() => setView(v)} className={`min-h-10 rounded-full px-5 text-sm font-bold transition ${view === v ? 'bg-brand-600 text-white' : 'text-ink-soft hover:text-ink'}`}>
+              {v === 'list' ? 'List' : 'Map'}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {(geo.status === 'denied' || geo.status === 'unavailable') && (
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-card border border-warn-600/20 bg-warn-50 p-4 text-sm text-warn-600" role="status">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-card border border-wheat-500/40 bg-wheat-100 p-4 text-sm font-medium text-warn-600" role="status">
           <span>{geo.status === 'denied' ? 'Location is blocked, so we can’t sort by distance.' : 'We couldn’t get your location.'} Showing all pickup stores.</span>
           <Button size="sm" variant="secondary" onClick={geo.request}>Use my location</Button>
         </div>
       )}
 
-      <div className="mb-4 inline-flex rounded-xl bg-surface p-1 ring-1 ring-line" role="tablist" aria-label="View">
-        {(['list', 'map'] as const).map((v) => (
-          <button key={v} role="tab" aria-selected={view === v} onClick={() => setView(v)} className={`min-h-10 rounded-lg px-5 text-sm font-semibold ${view === v ? 'bg-brand-600 text-white' : 'text-ink-soft'}`}>
-            {v === 'list' ? 'List' : 'Map'}
-          </button>
-        ))}
-      </div>
-
       {waiting ? (
-        <div className="grid gap-3 md:grid-cols-2" aria-busy="true" aria-label="Loading stores">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-busy="true" aria-label="Loading stores">
           {[0, 1, 2].map((i) => <StoreCardSkeleton key={i} />)}
         </div>
       ) : active.isError ? (
@@ -64,7 +75,7 @@ export function HomePage() {
           action={coords ? <Button variant="secondary" onClick={() => void nearby.refetch()}>Refresh</Button> : undefined}
         />
       ) : view === 'list' ? (
-        <ul className="grid gap-3 md:grid-cols-2">
+        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {stores.map(({ store, distance }) => (
             <li key={store.id}><StoreCard store={store} distanceKm={distance} /></li>
           ))}

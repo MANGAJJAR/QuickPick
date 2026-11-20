@@ -23,10 +23,10 @@ function Row({ label, value, muted, strong }: { label: string; value: string; mu
 /** The savings moment: the hero of checkout. Text comes from the backend. */
 export function SavingsHero({ preview }: { preview: CheckoutPreview }) {
   return (
-    <div className="rounded-card bg-brand-700 p-5 text-white" role="status">
-      <p className="text-sm font-semibold uppercase tracking-wide text-brand-200">Pickup saves you</p>
-      <p className="mt-1 text-4xl font-extrabold tracking-tight num" data-testid="you-save">{formatINR(preview.pricing.you_save)}</p>
-      <p className="mt-1 text-brand-100">{preview.message}</p>
+    <div className="banner-texture rounded-[1.5rem] bg-brand-600 p-6 text-white shadow-lift" role="status">
+      <p className="inline-block rounded-full bg-wheat-300 px-3 py-1 text-xs font-extrabold uppercase tracking-wide text-brand-700">Pickup saves you</p>
+      <p className="mt-3 font-display text-6xl font-semibold tracking-tight text-wheat-300 num" data-testid="you-save">{formatINR(preview.pricing.you_save)}</p>
+      <p className="mt-2 text-brand-100">{preview.message}</p>
     </div>
   )
 }
@@ -43,7 +43,7 @@ export function Comparison({ preview }: { preview: CheckoutPreview }) {
         <Row label="Pickup discount" value="Not available" muted />
         <p className="mt-2 text-xs text-ink-faint">Illustrative: based on an average rider cost, not a quote.</p>
       </Card>
-      <Card className="border-2 border-brand-600 p-4">
+      <Card className="border-2 border-brand-500 bg-brand-50/60 p-4">
         <div className="flex items-center justify-between"><h3 className="text-base font-bold">QuickPick Pickup</h3><span className="rounded-full bg-brand-600 px-2.5 py-0.5 text-xs font-bold text-white">Pickup</span></div>
         <p className="mb-2 text-xs font-medium text-ink-faint">Collect from the store</p>
         <Row label="Items" value={formatINR(p.subtotal)} />

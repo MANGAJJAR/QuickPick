@@ -33,14 +33,14 @@ export default function StoreMap({ user, stores, onSelect }: Props) {
       const ll: L.LatLngExpression = [s.location.lat, s.location.lng]
       points.push(ll)
       const open = s.operating_status === 'OPEN'
-      L.marker(ll, { icon: pin(open ? '#16803c' : '#76847b', open ? '' : 'x'), title: s.name, alt: s.name })
+      L.marker(ll, { icon: pin(open ? '#1B4332' : '#6f7568', open ? '' : 'x'), title: s.name, alt: s.name })
         .addTo(map)
         .bindTooltip(`${s.name} · ${open ? 'Open' : 'Closed'}`)
         .on('click', () => onSelect(s.id))
     }
     if (user) {
       points.push([user.lat, user.lng])
-      L.circleMarker([user.lat, user.lng], { radius: 8, color: '#fff', weight: 3, fillColor: '#2563eb', fillOpacity: 1 }).addTo(map).bindTooltip('You')
+      L.circleMarker([user.lat, user.lng], { radius: 8, color: '#fff', weight: 3, fillColor: '#C85A32', fillOpacity: 1 }).addTo(map).bindTooltip('You')
     }
     if (points.length > 1) map.fitBounds(L.latLngBounds(points), { padding: [40, 40], maxZoom: 15 })
     else if (points.length === 1) map.setView(points[0]!, 14)

@@ -1,5 +1,6 @@
 import type { Api, DemoCredential } from './api'
 import { ApiError } from './client'
+import { DEMO_PRODUCTS, DEMO_STOCK_STORE_A } from './demoCatalogue'
 import type {
   AnalyticsOverview,
   AppNotification,
@@ -26,17 +27,9 @@ const rid = () => crypto.randomUUID().replace(/-/g, '')
 const paise = (s: string) => Math.round(Number(s) * 100)
 const rupees = (p: number) => (p / 100).toFixed(2)
 
-const CATALOGUE: Record<string, { name: string; price: string }> = {
-  milk: { name: 'Toned Milk 500 ml', price: '30.00' },
-  curd: { name: 'Fresh Curd 400 g', price: '40.00' },
-  eggs: { name: 'Farm Eggs (6)', price: '60.00' },
-  bread: { name: 'Brown Bread', price: '45.00' },
-  pav: { name: 'Pav Buns (6)', price: '35.00' },
-  banana: { name: 'Bananas (6)', price: '48.00' },
-  tomato: { name: 'Tomatoes 500 g', price: '32.00' },
-  chips: { name: 'Salted Chips', price: '20.00' },
-  cola: { name: 'Cola 750 ml', price: '40.00' },
-}
+const CATALOGUE: Record<string, { name: string; price: string }> = Object.fromEntries(
+  DEMO_PRODUCTS.map((p) => [p.id, { name: `${p.name} ${p.unit}`, price: p.price }]),
+)
 
 interface Credential { qr: string; otp: string; expiresAt: number; used: boolean; attempts: number }
 
@@ -46,7 +39,7 @@ export function createMockApi(): Api {
     operating_status: 'OPEN', pickup_enabled: true, preparation_capacity: 10, created_at: iso(), updated_at: iso(),
   }
   const stock = new Map<string, { available: number; updated: string }>(
-    Object.keys(CATALOGUE).map((id, i) => [id, { available: [24, 4, 30, 9, 3, 15, 18, 40, 6][i] ?? 10, updated: iso() }]),
+    Object.entries(DEMO_STOCK_STORE_A).map(([id, available]) => [id, { available, updated: iso() }]),
   )
   const orders: Order[] = []
   const creds = new Map<string, Credential>()

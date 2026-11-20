@@ -17,7 +17,7 @@ function Stat({ label, value, hint, tone = '' }: { label: string; value: ReactNo
 
 const STATUS_CHOICES: { value: StoreOperatingStatus; label: string; on: string }[] = [
   { value: 'OPEN', label: 'Open', on: 'bg-st-ready text-white' },
-  { value: 'PAUSED', label: 'Pause', on: 'bg-amber-500 text-ink' },
+  { value: 'PAUSED', label: 'Pause', on: 'bg-wheat-500 text-ink' },
   { value: 'CLOSED', label: 'Closed', on: 'bg-st-cancelled text-white' },
 ]
 
@@ -102,7 +102,7 @@ export function OverviewPage() {
       ) : (
         <>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <Stat label="New orders waiting" value={pending ?? <Skeleton className="h-10 w-12" />} tone={pending ? 'border-amber-400 bg-amber-50' : ''} />
+            <Stat label="New orders waiting" value={pending ?? <Skeleton className="h-10 w-12" />} tone={pending ? 'border-wheat-500 bg-wheat-50' : ''} />
             <Stat label="In progress" value={inProgress ?? <Skeleton className="h-10 w-12" />} hint="Accepted + preparing" />
             <Stat label="Pickup queue" value={queue.data ? queue.data.length : <Skeleton className="h-10 w-12" />} hint="All open orders at the store" />
             <Stat label="Avg preparation time" value={analytics.data ? formatDuration(analytics.data.avg_preparation_seconds) : <Skeleton className="h-10 w-24" />} hint="Measured, all completed orders" />

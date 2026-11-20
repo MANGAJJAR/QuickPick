@@ -45,7 +45,7 @@ export function QueuePage() {
                   <td className="p-3 num">{e.item_count}</td>
                   <td className="p-3 num">{formatINR(e.total_amount)}</td>
                   <td className="p-3 font-bold num">{formatDuration(e.ready_waiting_seconds)}</td>
-                  <td className="p-3 text-right"><Link className="inline-flex min-h-11 items-center rounded-lg bg-brand-600 px-4 font-bold text-white hover:bg-brand-700" to={`/counter?order=${e.order_id}`}>Verify pickup</Link></td>
+                  <td className="p-3 text-right"><Link className="inline-flex min-h-11 items-center rounded-xl bg-cta-600 px-4 font-bold text-white hover:bg-cta-700" to={`/counter?order=${e.order_id}`}>Verify pickup</Link></td>
                 </tr>
               ))}
             </tbody>

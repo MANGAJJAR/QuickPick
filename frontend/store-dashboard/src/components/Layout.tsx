@@ -7,7 +7,7 @@ import { useOnline } from '../hooks/utility'
 import { setSoundEnabled, soundEnabled } from '../lib/sound'
 import { BellIcon, BoardIcon, BoxIcon, ChartIcon, GridIcon, QueueIcon, ScanIcon } from './icons'
 
-function Count({ n, tone = 'bg-amber-400 text-ink' }: { n: number; tone?: string }) {
+function Count({ n, tone = 'bg-wheat-300 text-brand-700' }: { n: number; tone?: string }) {
   if (n <= 0) return null
   return <span className={`ml-auto grid h-6 min-w-6 place-items-center rounded-full px-1.5 text-xs font-extrabold num ${tone}`} aria-label={`${n} pending`}>{n > 99 ? '99+' : n}</span>
 }
@@ -40,20 +40,20 @@ export function Layout() {
     <div className="flex min-h-screen">
       <aside className="sticky top-0 flex h-screen w-16 shrink-0 flex-col bg-rail text-white md:w-60" aria-label="Sidebar">
         <div className="flex h-16 items-center gap-2.5 px-4">
-          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-brand-500 text-ink"><BoxIcon /></span>
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-wheat-300 text-brand-600"><BoxIcon /></span>
           <div className="hidden min-w-0 md:block">
-            <p className="truncate text-sm font-extrabold leading-tight">QuickPick Store</p>
+            <p className="truncate font-display text-lg font-semibold leading-tight">Quick<span className="text-wheat-300">Pick</span> Store</p>
             <p className="truncate text-xs text-white/60">{store.data?.name}</p>
           </div>
         </div>
 
-        <Link to="/counter" className="mx-3 mb-3 flex min-h-14 items-center justify-center gap-2 rounded-xl bg-brand-500 px-3 font-extrabold text-ink hover:bg-brand-100" aria-label="Open pickup counter mode">
+        <Link to="/counter" className="mx-3 mb-3 flex min-h-14 items-center justify-center gap-2 rounded-xl bg-cta-600 px-3 font-extrabold text-white shadow-sm transition hover:bg-cta-700" aria-label="Open pickup counter mode">
           <ScanIcon size={24} /><span className="hidden md:inline">Pickup counter</span>
         </Link>
 
         <nav aria-label="Main" className="flex-1 space-y-1 px-2">
           {nav.map(({ to, label, icon: I, end, count }) => (
-            <NavLink key={to} to={to} end={end} aria-label={label} className={({ isActive }) => `flex min-h-12 items-center gap-3 rounded-lg px-3 text-[15px] font-bold ${isActive ? 'bg-white/15 text-white' : 'text-white/70 hover:bg-white/10'}`}>
+            <NavLink key={to} to={to} end={end} aria-label={label} className={({ isActive }) => `flex min-h-12 items-center gap-3 rounded-xl px-3 text-[15px] font-bold ${isActive ? 'bg-wheat-300 text-brand-600' : 'text-white/75 hover:bg-white/10'}`}>
               <I size={22} /><span className="hidden md:inline">{label}</span>
               <span className="hidden md:ml-auto md:block"><Count n={count} tone={to === '/inventory' ? 'bg-danger-600 text-white' : undefined} /></span>
             </NavLink>
@@ -67,10 +67,10 @@ export function Layout() {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        {api.isMock && <div className="bg-amber-100 px-4 py-1.5 text-center text-xs font-bold text-amber-900">Mock mode: demo data, not connected to the QuickPick backend</div>}
+        {api.isMock && <div className="bg-wheat-100 px-4 py-1.5 text-center text-xs font-bold text-st-placed">Mock mode: demo data, not connected to the QuickPick backend</div>}
         {!online && <div role="status" className="bg-ink px-4 py-2 text-center text-sm font-bold text-white">Offline. Orders are not updating; reconnect before handing over.</div>}
 
-        <header className="flex min-h-14 flex-wrap items-center justify-between gap-3 border-b border-line bg-surface px-5 py-2">
+        <header className="flex min-h-14 flex-wrap items-center justify-between gap-3 border-b border-line bg-surface/90 px-5 py-2 backdrop-blur">
           <div className="flex items-center gap-3">
             <span className={`inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-extrabold ${open ? 'bg-st-ready-bg text-st-ready' : 'bg-st-cancelled-bg text-st-cancelled'}`}>
               <span className={`h-2.5 w-2.5 rounded-full ${open ? 'bg-st-ready' : 'bg-st-cancelled'}`} aria-hidden="true" />

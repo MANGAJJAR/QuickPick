@@ -45,14 +45,14 @@ function Measured({ label, value, hint }: { label: string; value: ReactNode; hin
 
 function Illustrative({ data }: { data: AnalyticsOverview }) {
   return (
-    <Card className="border-2 border-dashed border-amber-500 bg-amber-50 p-4" data-testid="illustrative-card">
+    <Card className="border-2 border-dashed border-wheat-500 bg-wheat-50 p-4" data-testid="illustrative-card">
       <div className="flex items-center gap-1">
-        <span className="rounded bg-amber-200 px-2 py-0.5 text-xs font-extrabold uppercase tracking-wide text-amber-900">Estimated, based on assumptions</span>
+        <span className="rounded bg-wheat-300 px-2 py-0.5 text-xs font-extrabold uppercase tracking-wide text-st-placed">Estimated, based on assumptions</span>
         <InfoTip text="Illustrative only: completed pickups multiplied by an assumed rider cost per delivery. It is not measured and not verified savings." />
       </div>
-      <p className="mt-2 text-sm font-bold text-amber-900">Estimated delivery cost saved</p>
-      <p className="mt-1 text-4xl font-extrabold tracking-tight text-amber-900 num">≈ {formatINR(data.estimated_rider_cost_saved)}</p>
-      <p className="mt-1 text-xs text-amber-900/80">{data.estimate_note}</p>
+      <p className="mt-2 text-sm font-bold text-st-placed">Estimated delivery cost saved</p>
+      <p className="mt-1 text-4xl font-extrabold tracking-tight text-st-placed num">≈ {formatINR(data.estimated_rider_cost_saved)}</p>
+      <p className="mt-1 text-xs text-st-placed/80">{data.estimate_note}</p>
     </Card>
   )
 }
@@ -87,7 +87,7 @@ export function AnalyticsPage() {
             <Measured label="Revenue from pickups" value={overview.data ? formatINR(overview.data.total_revenue) : <Skeleton className="h-10 w-28" />} hint="What customers paid, completed orders" />
           </div>
 
-          <SectionTitle badge="Estimated" tone="bg-amber-200 text-amber-900">Illustrative, not measured</SectionTitle>
+          <SectionTitle badge="Estimated" tone="bg-wheat-300 text-st-placed">Illustrative, not measured</SectionTitle>
           <div className="grid gap-4 md:grid-cols-3">
             {overview.data ? <Illustrative data={overview.data} /> : <Skeleton className="h-36 w-full" />}
           </div>

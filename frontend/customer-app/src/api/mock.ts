@@ -1,5 +1,6 @@
 import type { Api } from './api'
 import { ApiError } from './client'
+import { DEMO_PRODUCTS, DEMO_STOCK, DEMO_STORES } from './demoData'
 import type {
   AppNotification,
   CartLine,
@@ -26,16 +27,11 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 const LATENCY = 220
 
 const stores: Store[] = [
-  {
-    id: 'store-a', name: 'Satellite Dark Store', address: 'Satellite Rd, Ahmedabad',
-    location: { lat: 23.0258, lng: 72.5873 }, operating_status: 'OPEN', pickup_enabled: true,
-    preparation_capacity: 10, created_at: NOW(), updated_at: NOW(),
-  },
-  {
-    id: 'store-b', name: 'Bopal Dark Store', address: 'Bopal, Ahmedabad',
-    location: { lat: 23.03, lng: 72.47 }, operating_status: 'OPEN', pickup_enabled: true,
-    preparation_capacity: 10, created_at: NOW(), updated_at: NOW(),
-  },
+  ...DEMO_STORES.map((d): Store => ({
+    id: d.id, name: `${d.name}`, address: d.address, location: { lat: d.lat, lng: d.lng },
+    operating_status: 'OPEN', pickup_enabled: true, preparation_capacity: d.capacity, created_at: NOW(), updated_at: NOW(),
+  })),
+  // One closed store, so the "closed" UI always has an example.
   {
     id: 'store-c', name: 'Vastrapur Dark Store', address: 'Vastrapur, Ahmedabad',
     location: { lat: 23.0395, lng: 72.5295 }, operating_status: 'CLOSED', pickup_enabled: true,
@@ -47,25 +43,10 @@ const mk = (id: string, name: string, category: string, price: string, unit: str
   id, name, description: '', category, image_url: null, price, unit, is_active: true,
 })
 
-const products: Product[] = [
-  mk('milk', 'Toned Milk', 'Dairy', '30.00', '500 ml'),
-  mk('curd', 'Fresh Curd', 'Dairy', '40.00', '400 g'),
-  mk('eggs', 'Farm Eggs', 'Dairy', '60.00', '6 pcs'),
-  mk('bread', 'Brown Bread', 'Bakery', '45.00', '400 g'),
-  mk('pav', 'Pav Buns', 'Bakery', '35.00', '6 pcs'),
-  mk('banana', 'Bananas', 'Fruits & Veg', '48.00', '6 pcs'),
-  mk('tomato', 'Tomatoes', 'Fruits & Veg', '32.00', '500 g'),
-  mk('chips', 'Salted Chips', 'Snacks', '20.00', '52 g'),
-  mk('biscuit', 'Marie Biscuits', 'Snacks', '25.00', '250 g'),
-  mk('cola', 'Cola', 'Beverages', '40.00', '750 ml'),
-]
+const products: Product[] = DEMO_PRODUCTS.map((p) => mk(p.id, p.name, p.category, p.price, p.unit))
 
 // stock[storeId][productId] = pickable quantity
-const stock: Record<string, Record<string, number>> = {
-  'store-a': { milk: 10, curd: 3, eggs: 20, bread: 5, pav: 0, banana: 12, tomato: 8, chips: 30, biscuit: 15, cola: 2 },
-  'store-b': { milk: 10, curd: 6, eggs: 0, bread: 9, pav: 12, banana: 4, tomato: 0, chips: 25, biscuit: 0, cola: 14 },
-  'store-c': { milk: 5 },
-}
+const stock: Record<string, Record<string, number>> = { ...DEMO_STOCK, 'store-c': { milk: 5 } }
 
 interface MockOrder { order: Order; createdAtMs: number; override?: OrderStatus; lastNotified: OrderStatus }
 const orders = new Map<string, MockOrder>()

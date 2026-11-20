@@ -116,8 +116,8 @@ export function InventoryPage() {
 
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <div role="tablist" aria-label="Inventory view" className="flex rounded-lg bg-canvas p-1 ring-1 ring-line">
-          <button role="tab" aria-selected={tab === 'all'} onClick={() => setTab('all')} className={`min-h-11 rounded-md px-5 font-bold ${tab === 'all' ? 'bg-ink text-white' : 'text-ink-soft'}`}>All items</button>
-          <button role="tab" aria-selected={tab === 'low'} onClick={() => setTab('low')} className={`flex min-h-11 items-center gap-2 rounded-md px-5 font-bold ${tab === 'low' ? 'bg-ink text-white' : 'text-ink-soft'}`}>
+          <button role="tab" aria-selected={tab === 'all'} onClick={() => setTab('all')} className={`min-h-11 rounded-md px-5 font-bold ${tab === 'all' ? 'bg-brand-600 text-white' : 'text-ink-soft'}`}>All items</button>
+          <button role="tab" aria-selected={tab === 'low'} onClick={() => setTab('low')} className={`flex min-h-11 items-center gap-2 rounded-md px-5 font-bold ${tab === 'low' ? 'bg-brand-600 text-white' : 'text-ink-soft'}`}>
             Low stock
             <span data-testid="low-stock-badge" className={`grid h-6 min-w-6 place-items-center rounded-full px-1.5 text-xs font-extrabold num ${(low.data?.length ?? 0) > 0 ? 'bg-danger-600 text-white' : 'bg-line text-ink-soft'}`}>{low.data?.length ?? '–'}</span>
           </button>

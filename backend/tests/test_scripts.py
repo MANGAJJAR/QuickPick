@@ -25,3 +25,19 @@ def test_build_claims_validates_store_requirement():
         build_claims(Role.STORE_MANAGER, None)
     with pytest.raises(ValueError):
         build_claims(Role.ADMIN, "store-a")
+
+
+async def test_full_demo_seed_has_17_stores_with_at_least_25_items_each():
+    from scripts.demo_catalogue import STORE_ROWS
+
+    db = FakeFirestore()
+    counts = await populate(db, full=True)
+    assert counts["stores"] == 17 and len(STORE_ROWS) == 17
+    per_store: dict[str, int] = {}
+    for doc in db.docs("inventory").values():
+        if doc["available_quantity"] > 0:
+            per_store[doc["store_id"]] = per_store.get(doc["store_id"], 0) + 1
+    assert set(per_store) == set(db.docs("stores"))
+    assert min(per_store.values()) >= 25, per_store
+    # still idempotent
+    assert await populate(db, full=True) == counts

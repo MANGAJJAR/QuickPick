@@ -29,7 +29,7 @@ export function NotificationsPage() {
         <ul className="space-y-3">
           {list.data.map((n) => (
             <li key={n.id}>
-              <Card className={`flex items-start justify-between gap-3 p-4 ${n.read ? '' : 'border-2 border-amber-400 bg-amber-50'}`}>
+              <Card className={`flex items-start justify-between gap-3 p-4 ${n.read ? '' : 'border-2 border-wheat-500 bg-wheat-50'}`}>
                 <div>
                   <p className="font-extrabold">{n.title}{!n.read && <span className="sr-only"> (unread)</span>}</p>
                   <p className="text-sm text-ink-soft">{n.body}</p>

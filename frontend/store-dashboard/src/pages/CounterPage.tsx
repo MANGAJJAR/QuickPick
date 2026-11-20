@@ -190,10 +190,10 @@ function DemoHelpers({ onQr, onPick }: { onQr(payload: string): void; onPick(ord
   const creds = demo.credentials()
   const first = creds[0]
   const used = demo.lastUsedQr()
-  const btn = 'min-h-10 rounded-lg border-2 border-dashed border-amber-500 bg-amber-50 px-3 text-sm font-bold text-amber-900 disabled:opacity-40'
+  const btn = 'min-h-10 rounded-lg border-2 border-dashed border-wheat-500 bg-wheat-50 px-3 text-sm font-bold text-st-placed disabled:opacity-40'
   return (
-    <section className="mt-5 rounded-xl border-2 border-dashed border-amber-400 p-4" aria-label="Mock mode demo helpers">
-      <h2 className="text-sm font-extrabold uppercase tracking-wide text-amber-900">Mock mode: pretend to be the customer</h2>
+    <section className="mt-5 rounded-xl border-2 border-dashed border-wheat-500 p-4" aria-label="Mock mode demo helpers">
+      <h2 className="text-sm font-extrabold uppercase tracking-wide text-st-placed">Mock mode: pretend to be the customer</h2>
       <div className="mt-2 flex flex-wrap gap-2">
         <button className={btn} disabled={!first} onClick={() => first && onQr(first.qr_payload)}>Show valid QR</button>
         <button className={btn} disabled={!first} onClick={() => first && onPick(first.order_id, first.otp)}>Fill valid code</button>

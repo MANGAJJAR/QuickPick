@@ -26,7 +26,7 @@ export function CartPage() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <PageTitle sub={<>Pickup from <Link className="font-semibold text-brand-700 underline" to={`/store/${cart.store.id}`}>{cart.store.name}</Link></>}>Your cart</PageTitle>
+      <PageTitle sub={<>Pickup from <Link className="font-bold text-brand-500 underline" to={`/store/${cart.store.id}`}>{cart.store.name}</Link></>}>Your cart</PageTitle>
 
       <Card className="divide-y divide-line">
         {cart.items.map((item) => (
@@ -53,11 +53,11 @@ export function CartPage() {
             {preview.data ? <span className="text-lg font-bold num">{formatINR(preview.data.pricing.subtotal)}</span> : <Skeleton className="h-6 w-20" />}
           </div>
           {preview.data && (
-            <p className="mt-2 rounded-lg bg-brand-50 px-3 py-2 text-sm font-semibold text-brand-900">{preview.data.message}. See the breakdown at checkout.</p>
+            <p className="mt-2 rounded-lg bg-wheat-100 px-3 py-2 text-sm font-bold text-brand-700">{preview.data.message}. See the breakdown at checkout.</p>
           )}
-          <Link to="/checkout" className="mt-4 block" aria-disabled={!preview.data}>
-            <Button className="w-full" disabled={!preview.data}>Go to checkout</Button>
-          </Link>
+          {preview.data
+            ? <ButtonLink to="/checkout" className="mt-4 w-full text-lg">Go to checkout</ButtonLink>
+            : <Button className="mt-4 w-full text-lg" disabled>Go to checkout</Button>}
         </Card>
       )}
 

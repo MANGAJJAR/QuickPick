@@ -16,7 +16,7 @@ export function OrderCard({ order, now, flash, onOpen }: Props) {
   const waiting = secondsSince(order.created_at, now)
   const late = order.order_status === 'PLACED' && waiting > 120 // visual urgency only
   return (
-    <article className={`rounded-xl border-2 bg-surface p-3.5 ${flash ? 'anim-flash border-amber-400' : late ? 'border-st-placed/50' : 'border-line'}`} aria-label={`Order ${shortId(order.id)}`}>
+    <article className={`rounded-xl border-2 bg-surface p-3.5 ${flash ? 'anim-flash border-wheat-500' : late ? 'border-st-placed/50' : 'border-line'}`} aria-label={`Order ${shortId(order.id)}`}>
       <button type="button" onClick={() => onOpen(order.id)} className="block w-full text-left" aria-label={`Open details for order ${shortId(order.id)}`}>
         <div className="flex items-center justify-between gap-2">
           <h3 className="text-xl font-extrabold tracking-tight num">#{shortId(order.id)}</h3>
