@@ -1,6 +1,7 @@
 """Provision a user's role (and store) as Firebase custom claims. Run by an operator, never by the API.
 
     python -m scripts.set_role --uid <firebase-uid> --role STORE_STAFF --store-id store-a
+    python -m scripts.set_role --email manager@example.com --role STORE_MANAGER --store-id store-a
     python -m scripts.set_role --uid <firebase-uid> --role CUSTOMER
 
 The user must sign out/in (or refresh their ID token) before the new claims appear.
@@ -32,16 +33,20 @@ def build_claims(role: Role, store_id: str | None) -> dict[str, str]:
 def main() -> None:
     """CLI entry point."""
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--uid", required=True)
+    parser.add_argument("--uid", help="Firebase user id (or use --email)")
+    parser.add_argument("--email", help="Look the user up by email instead of --uid")
     parser.add_argument("--role", required=True, choices=[r.value for r in Role])
     parser.add_argument("--store-id")
     args = parser.parse_args()
+    if not args.uid and not args.email:
+        parser.error("give --uid or --email")
     claims = build_claims(Role(args.role), args.store_id)
     init_firebase_admin(get_settings())
     from firebase_admin import auth
 
-    auth.set_custom_user_claims(args.uid, claims)
-    print(f"Set claims for {args.uid}: {claims}")
+    uid = args.uid or auth.get_user_by_email(args.email).uid
+    auth.set_custom_user_claims(uid, claims)
+    print(f"Set claims for {args.email or uid} ({uid}): {claims}")
 
 
 if __name__ == "__main__":

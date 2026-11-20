@@ -1,0 +1,37 @@
+{
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "backend/firestore.indexes.json"
+  },
+  "hosting": [
+    {
+      "target": "customer",
+      "public": "frontend/customer-app/dist",
+      "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+      "rewrites": [
+        { "source": "/api/**", "run": { "serviceId": "quickpick-api", "region": "asia-south1" } },
+        { "source": "**", "destination": "/index.html" }
+      ],
+      "headers": [
+        { "source": "/assets/**", "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }] },
+        { "source": "/products/**", "headers": [{ "key": "Cache-Control", "value": "public, max-age=2592000" }] },
+        { "source": "/index.html", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] },
+        { "source": "/firebase-messaging-sw.js", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] }
+      ]
+    },
+    {
+      "target": "dashboard",
+      "public": "frontend/store-dashboard/dist",
+      "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+      "rewrites": [
+        { "source": "/api/**", "run": { "serviceId": "quickpick-api", "region": "asia-south1" } },
+        { "source": "**", "destination": "/index.html" }
+      ],
+      "headers": [
+        { "source": "/assets/**", "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }] },
+        { "source": "/index.html", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] },
+        { "source": "/firebase-messaging-sw.js", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] }
+      ]
+    }
+  ]
+}
