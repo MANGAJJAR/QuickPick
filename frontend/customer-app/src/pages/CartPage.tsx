@@ -1,6 +1,7 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useCart } from '../cart/CartContext'
+import { ClearCartDialog } from '../components/ClearCartDialog'
 import { QuantityStepper } from '../components/QuantityStepper'
 import { Button, Card, EmptyState, ErrorState, PageTitle, Skeleton, ButtonLink } from '../components/ui'
 import { useCartLines } from '../hooks/useCartLines'
@@ -8,9 +9,10 @@ import { usePreview } from '../hooks/queries'
 import { formatINR } from '../lib/format'
 
 export function CartPage() {
-  const { cart, setQty, remove, clear } = useCart()
+  const { cart, count, setQty, remove, clear } = useCart()
   const { storeId, lines } = useCartLines()
   const preview = usePreview(storeId, lines)
+  const [confirmClear, setConfirmClear] = useState(false)
   useEffect(() => { document.title = 'Your cart · QuickPick' }, [])
 
   if (!cart.store || cart.items.length === 0) {
@@ -61,7 +63,8 @@ export function CartPage() {
         </Card>
       )}
 
-      <div className="mt-3 text-center"><Button variant="ghost" size="sm" onClick={clear}>Clear cart</Button></div>
+      <div className="mt-3 text-center"><Button variant="ghost" size="sm" onClick={() => setConfirmClear(true)}>Clear cart</Button></div>
+      {confirmClear && <ClearCartDialog itemCount={count} onConfirm={() => { clear(); setConfirmClear(false) }} onCancel={() => setConfirmClear(false)} />}
     </div>
   )
 }

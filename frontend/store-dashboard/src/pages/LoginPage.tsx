@@ -43,7 +43,7 @@ export function LoginPage() {
   const field = 'mt-1 block min-h-12 w-full rounded-lg border-2 border-line bg-surface px-4 text-base outline-none focus:border-brand-500'
 
   return (
-    <div className="grid min-h-screen place-items-center bg-rail p-6">
+    <div className="grid min-h-dvh place-items-center bg-rail p-6">
       <div className="w-full max-w-md">
         <div className="mb-6 flex items-center gap-3 text-white">
           <span className="grid h-12 w-12 place-items-center rounded-2xl bg-wheat-300 text-brand-600"><BoxIcon size={26} /></span>

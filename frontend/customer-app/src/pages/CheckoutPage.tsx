@@ -130,7 +130,7 @@ export function CheckoutPage() {
             </div>
           )}
 
-          <div className="sticky bottom-14 -mx-4 bg-canvas/95 px-4 pb-3 pt-3 backdrop-blur md:bottom-0">
+          <div className="sticky bottom-16 -mx-4 bg-canvas/95 px-4 pb-3 pt-3 backdrop-blur md:bottom-0">
             <Button className="w-full text-lg" loading={place.isPending} onClick={onPlace} disabled={!preview.data}>
               Place pickup order · {formatINR(preview.data.pricing.total_amount)}
             </Button>

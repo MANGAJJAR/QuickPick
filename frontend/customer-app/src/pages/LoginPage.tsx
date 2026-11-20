@@ -54,7 +54,7 @@ export function LoginPage() {
   const field = 'mt-1 block min-h-12 w-full rounded-xl border border-line bg-canvas px-4 text-base outline-none focus:border-brand-500 focus:bg-white'
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-4 py-10">
+    <div className="mx-auto flex min-h-dvh max-w-md flex-col justify-center px-4 py-10">
       <div className="banner-texture mb-6 overflow-hidden rounded-[1.75rem] bg-brand-600 px-6 py-8 text-center text-white">
         <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-wheat-300 text-brand-600"><PinIcon width={28} height={28} /></span>
         <h1 className="mt-4 font-display text-4xl font-semibold tracking-tight">Quick<span className="text-wheat-300">Pick</span></h1>

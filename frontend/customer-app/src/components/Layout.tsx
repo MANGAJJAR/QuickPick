@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, NavLink, Outlet } from 'react-router-dom'
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { useCart } from '../cart/CartContext'
 import { useNotifications } from '../hooks/queries'
@@ -40,6 +40,7 @@ const NAV = [
 
 export function Layout() {
   const online = useOnline()
+  const { pathname } = useLocation()
   const { count } = useCart()
   const { signOut, user } = useAuth()
   const api = useApi()
@@ -48,7 +49,7 @@ export function Layout() {
   const badge = (to: string) => (to === '/cart' ? count : to === '/notifications' ? unread : 0)
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-dvh flex-col">
       {api.isMock && (
         <div className="bg-wheat-300 px-4 py-1.5 text-center text-xs font-bold text-brand-700">
           Mock mode: demo data, not connected to the QuickPick backend
@@ -81,7 +82,7 @@ export function Layout() {
       </header>
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-28 pt-5 md:pb-12">
-        <Outlet />
+        <div key={pathname} className="anim-rise"><Outlet /></div>
       </main>
 
       <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_-14px_rgb(24_31_26/0.25)] backdrop-blur md:hidden">

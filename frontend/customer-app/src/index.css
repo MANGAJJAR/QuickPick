@@ -123,3 +123,12 @@ h1, h2, h3 { letter-spacing: -0.015em; }
 }
 
 .leaflet-container { font-family: var(--font-sans); border-radius: var(--radius-card); }
+
+/* Typographic polish: balanced headings, no orphans in body copy. */
+h1, h2, h3 { text-wrap: balance; }
+p { text-wrap: pretty; }
+
+/* One switch for everyone who asks for less motion. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}

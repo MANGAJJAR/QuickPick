@@ -79,7 +79,7 @@ export function CounterPage() {
   if (result?.kind === 'failure') return <FailureScreen failure={result.failure} onRetry={reset} />
 
   return (
-    <div className="min-h-screen bg-canvas p-4 md:p-6">
+    <div className="min-h-dvh bg-canvas p-4 md:p-6">
       <header className="mb-4 flex items-center justify-between gap-3">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight">Pickup counter</h1>
@@ -151,7 +151,7 @@ export function CounterPage() {
 
 function SuccessScreen({ order, onNext }: { order: Order; onNext(): void }) {
   return (
-    <div className="grid min-h-screen place-items-center bg-st-ready p-6 text-white" role="status" aria-live="assertive">
+    <div className="grid min-h-dvh place-items-center bg-st-ready p-6 text-white" role="status" aria-live="assertive">
       <div className="anim-pop w-full max-w-xl text-center">
         <div className="mx-auto grid h-28 w-28 place-items-center rounded-full bg-white text-st-ready"><CheckIcon size={64} strokeWidth={3} /></div>
         <h1 className="mt-5 text-6xl font-extrabold tracking-tight">Handed over</h1>
@@ -170,7 +170,7 @@ function SuccessScreen({ order, onNext }: { order: Order; onNext(): void }) {
 
 function FailureScreen({ failure, onRetry }: { failure: VerifyFailure; onRetry(): void }) {
   return (
-    <div className="grid min-h-screen place-items-center bg-st-cancelled p-6 text-white" role="alert" aria-live="assertive">
+    <div className="grid min-h-dvh place-items-center bg-st-cancelled p-6 text-white" role="alert" aria-live="assertive">
       <div className="anim-pop w-full max-w-xl text-center">
         <div className="mx-auto grid h-28 w-28 place-items-center rounded-full bg-white text-st-cancelled"><XIcon size={64} strokeWidth={3} /></div>
         <h1 className="mt-5 text-6xl font-extrabold tracking-tight">{failure.title}</h1>

@@ -108,7 +108,7 @@ export function StorePage() {
       </div>
 
       {inThisCart > 0 && (
-        <Link to="/cart" className="anim-rise fixed inset-x-4 bottom-20 z-30 mx-auto flex max-w-md items-center justify-between rounded-2xl bg-cta-600 px-5 py-3.5 font-extrabold text-white shadow-lift transition hover:bg-cta-700 md:bottom-6" aria-label={`View cart, ${inThisCart} items`}>
+        <Link to="/cart" className="anim-rise fixed inset-x-4 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-30 mx-auto flex max-w-md items-center justify-between rounded-2xl bg-cta-600 px-5 py-3.5 font-extrabold text-white shadow-lift transition hover:bg-cta-700 md:bottom-6" aria-label={`View cart, ${inThisCart} items`}>
           <span className="flex items-center gap-2"><CartIcon />{inThisCart} item{inThisCart > 1 ? 's' : ''}</span>
           <span>View cart →</span>
         </Link>

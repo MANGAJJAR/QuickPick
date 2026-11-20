@@ -37,8 +37,8 @@ export function Layout() {
   const open = store.data?.operating_status === 'OPEN'
 
   return (
-    <div className="flex min-h-screen">
-      <aside className="sticky top-0 flex h-screen w-16 shrink-0 flex-col bg-rail text-white md:w-60" aria-label="Sidebar">
+    <div className="flex min-h-dvh">
+      <aside className="sticky top-0 flex h-dvh w-16 shrink-0 flex-col bg-rail text-white md:w-60" aria-label="Sidebar">
         <div className="flex h-16 items-center gap-2.5 px-4">
           <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-wheat-300 text-brand-600"><BoxIcon /></span>
           <div className="hidden min-w-0 md:block">
