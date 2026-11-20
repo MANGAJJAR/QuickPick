@@ -1,0 +1,45 @@
+"""Live pickup queue for store staff. OWNER: Developer 2."""
+
+from __future__ import annotations
+
+from datetime import datetime
+from typing import Any, Callable
+
+from app.modules.orders.repository import OrderRepository
+from app.modules.pickup.schemas import QueueEntry
+from app.shared.enums import OrderStatus
+from app.shared.models import Order, utc_now
+
+
+def build_queue_entry(order: Order, now: datetime) -> QueueEntry:
+    """Timers: preparation runs from acceptance until ready; ready orders accrue waiting time."""
+    prep_elapsed: int | None = None
+    start = order.preparing_at or order.accepted_at
+    if start is not None:
+        end = order.ready_at or now
+        prep_elapsed = max(0, int((end - start).total_seconds()))
+    waiting: int | None = None
+    if order.order_status == OrderStatus.READY_FOR_PICKUP and order.ready_at is not None:
+        waiting = max(0, int((now - order.ready_at).total_seconds()))
+    return QueueEntry(
+        order_id=order.id,
+        order_status=order.order_status.value,
+        item_count=sum(i.quantity for i in order.items),
+        total_amount=str(order.total_amount),
+        placed_at=order.created_at,
+        preparation_elapsed_seconds=prep_elapsed,
+        ready_waiting_seconds=waiting,
+    )
+
+
+class PickupQueueService:
+    """Reads the open orders of one store as a queue."""
+
+    def __init__(self, db: Any, clock: Callable[[], datetime] = utc_now) -> None:
+        self._orders = OrderRepository(db)
+        self._clock = clock
+
+    async def queue(self, store_id: str) -> list[QueueEntry]:
+        """Open orders of ``store_id``, oldest first, with timers."""
+        now = self._clock()
+        return [build_queue_entry(o, now) for o in await self._orders.active_queue(store_id)]

@@ -1,0 +1,25 @@
+# Local development: API + Firestore emulator. No real credentials needed for Firestore.
+# Auth: run the Firebase Auth emulator on the host (see docs/DEVELOPMENT_GUIDE.md) or point
+# the API at a dev Firebase project with `gcloud auth application-default login`.
+services:
+  firestore:
+    image: gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators
+    command: gcloud emulators firestore start --host-port=0.0.0.0:8081 --project=quickpick-dev
+    ports:
+      - "8081:8081"
+
+  api:
+    build: .
+    depends_on:
+      - firestore
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    environment:
+      ENVIRONMENT: development
+      GCP_PROJECT_ID: quickpick-dev
+      FIRESTORE_EMULATOR_HOST: firestore:8081
+      FIREBASE_AUTH_EMULATOR_HOST: host.docker.internal:9099
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
